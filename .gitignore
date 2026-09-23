@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.venv-asr/
+.venv-asr-wsl/
+.pytest_cache/
+logs/
+audio/
+asr_audio/
+.env
+.claude/

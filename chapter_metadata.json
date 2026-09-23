@@ -1,0 +1,625 @@
+[
+  {
+    "chapter_id": "MAT.1.VAHNT",
+    "book": "MAT",
+    "chapter": 1,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.1.VAHNT",
+    "audio_file": "audio/MAT_001.mp3"
+  },
+  {
+    "chapter_id": "MAT.2.VAHNT",
+    "book": "MAT",
+    "chapter": 2,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.2.VAHNT",
+    "audio_file": "audio/MAT_002.mp3"
+  },
+  {
+    "chapter_id": "MAT.3.VAHNT",
+    "book": "MAT",
+    "chapter": 3,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.3.VAHNT",
+    "audio_file": "audio/MAT_003.mp3"
+  },
+  {
+    "chapter_id": "MAT.4.VAHNT",
+    "book": "MAT",
+    "chapter": 4,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.4.VAHNT",
+    "audio_file": "audio/MAT_004.mp3"
+  },
+  {
+    "chapter_id": "MAT.5.VAHNT",
+    "book": "MAT",
+    "chapter": 5,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.5.VAHNT",
+    "audio_file": "audio/MAT_005.mp3"
+  },
+  {
+    "chapter_id": "MAT.6.VAHNT",
+    "book": "MAT",
+    "chapter": 6,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.6.VAHNT",
+    "audio_file": "audio/MAT_006.mp3"
+  },
+  {
+    "chapter_id": "MAT.7.VAHNT",
+    "book": "MAT",
+    "chapter": 7,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.7.VAHNT",
+    "audio_file": "audio/MAT_007.mp3"
+  },
+  {
+    "chapter_id": "MAT.8.VAHNT",
+    "book": "MAT",
+    "chapter": 8,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.8.VAHNT",
+    "audio_file": "audio/MAT_008.mp3"
+  },
+  {
+    "chapter_id": "MAT.9.VAHNT",
+    "book": "MAT",
+    "chapter": 9,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.9.VAHNT",
+    "audio_file": "audio/MAT_009.mp3"
+  },
+  {
+    "chapter_id": "MAT.10.VAHNT",
+    "book": "MAT",
+    "chapter": 10,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.10.VAHNT",
+    "audio_file": "audio/MAT_010.mp3"
+  },
+  {
+    "chapter_id": "MAT.11.VAHNT",
+    "book": "MAT",
+    "chapter": 11,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.11.VAHNT",
+    "audio_file": "audio/MAT_011.mp3"
+  },
+  {
+    "chapter_id": "MAT.12.VAHNT",
+    "book": "MAT",
+    "chapter": 12,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.12.VAHNT",
+    "audio_file": "audio/MAT_012.mp3"
+  },
+  {
+    "chapter_id": "MAT.13.VAHNT",
+    "book": "MAT",
+    "chapter": 13,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.13.VAHNT",
+    "audio_file": "audio/MAT_013.mp3"
+  },
+  {
+    "chapter_id": "MAT.14.VAHNT",
+    "book": "MAT",
+    "chapter": 14,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.14.VAHNT",
+    "audio_file": "audio/MAT_014.mp3"
+  },
+  {
+    "chapter_id": "MAT.15.VAHNT",
+    "book": "MAT",
+    "chapter": 15,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.15.VAHNT",
+    "audio_file": "audio/MAT_015.mp3"
+  },
+  {
+    "chapter_id": "MAT.16.VAHNT",
+    "book": "MAT",
+    "chapter": 16,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.16.VAHNT",
+    "audio_file": "audio/MAT_016.mp3"
+  },
+  {
+    "chapter_id": "MAT.17.VAHNT",
+    "book": "MAT",
+    "chapter": 17,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.17.VAHNT",
+    "audio_file": "audio/MAT_017.mp3"
+  },
+  {
+    "chapter_id": "MAT.18.VAHNT",
+    "book": "MAT",
+    "chapter": 18,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.18.VAHNT",
+    "audio_file": "audio/MAT_018.mp3"
+  },
+  {
+    "chapter_id": "MAT.19.VAHNT",
+    "book": "MAT",
+    "chapter": 19,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.19.VAHNT",
+    "audio_file": "audio/MAT_019.mp3"
+  },
+  {
+    "chapter_id": "MAT.20.VAHNT",
+    "book": "MAT",
+    "chapter": 20,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.20.VAHNT",
+    "audio_file": "audio/MAT_020.mp3"
+  },
+  {
+    "chapter_id": "MAT.21.VAHNT",
+    "book": "MAT",
+    "chapter": 21,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.21.VAHNT",
+    "audio_file": "audio/MAT_021.mp3"
+  },
+  {
+    "chapter_id": "MAT.22.VAHNT",
+    "book": "MAT",
+    "chapter": 22,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.22.VAHNT",
+    "audio_file": "audio/MAT_022.mp3"
+  },
+  {
+    "chapter_id": "MAT.23.VAHNT",
+    "book": "MAT",
+    "chapter": 23,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.23.VAHNT",
+    "audio_file": "audio/MAT_023.mp3"
+  },
+  {
+    "chapter_id": "MAT.24.VAHNT",
+    "book": "MAT",
+    "chapter": 24,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.24.VAHNT",
+    "audio_file": "audio/MAT_024.mp3"
+  },
+  {
+    "chapter_id": "MAT.25.VAHNT",
+    "book": "MAT",
+    "chapter": 25,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.25.VAHNT",
+    "audio_file": "audio/MAT_025.mp3"
+  },
+  {
+    "chapter_id": "MAT.26.VAHNT",
+    "book": "MAT",
+    "chapter": 26,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.26.VAHNT",
+    "audio_file": "audio/MAT_026.mp3"
+  },
+  {
+    "chapter_id": "MAT.27.VAHNT",
+    "book": "MAT",
+    "chapter": 27,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.27.VAHNT",
+    "audio_file": "audio/MAT_027.mp3"
+  },
+  {
+    "chapter_id": "MAT.28.VAHNT",
+    "book": "MAT",
+    "chapter": 28,
+    "url": "https://www.bible.com/audio-bible/3451/MAT.28.VAHNT",
+    "audio_file": "audio/MAT_028.mp3"
+  },
+  {
+    "chapter_id": "MRK.1.VAHNT",
+    "book": "MRK",
+    "chapter": 1,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.1.VAHNT",
+    "audio_file": "audio/MRK_001.mp3"
+  },
+  {
+    "chapter_id": "MRK.2.VAHNT",
+    "book": "MRK",
+    "chapter": 2,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.2.VAHNT",
+    "audio_file": "audio/MRK_002.mp3"
+  },
+  {
+    "chapter_id": "MRK.3.VAHNT",
+    "book": "MRK",
+    "chapter": 3,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.3.VAHNT",
+    "audio_file": "audio/MRK_003.mp3"
+  },
+  {
+    "chapter_id": "MRK.4.VAHNT",
+    "book": "MRK",
+    "chapter": 4,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.4.VAHNT",
+    "audio_file": "audio/MRK_004.mp3"
+  },
+  {
+    "chapter_id": "MRK.5.VAHNT",
+    "book": "MRK",
+    "chapter": 5,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.5.VAHNT",
+    "audio_file": "audio/MRK_005.mp3"
+  },
+  {
+    "chapter_id": "MRK.6.VAHNT",
+    "book": "MRK",
+    "chapter": 6,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.6.VAHNT",
+    "audio_file": "audio/MRK_006.mp3"
+  },
+  {
+    "chapter_id": "MRK.7.VAHNT",
+    "book": "MRK",
+    "chapter": 7,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.7.VAHNT",
+    "audio_file": "audio/MRK_007.mp3"
+  },
+  {
+    "chapter_id": "MRK.8.VAHNT",
+    "book": "MRK",
+    "chapter": 8,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.8.VAHNT",
+    "audio_file": "audio/MRK_008.mp3"
+  },
+  {
+    "chapter_id": "MRK.9.VAHNT",
+    "book": "MRK",
+    "chapter": 9,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.9.VAHNT",
+    "audio_file": "audio/MRK_009.mp3"
+  },
+  {
+    "chapter_id": "MRK.10.VAHNT",
+    "book": "MRK",
+    "chapter": 10,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.10.VAHNT",
+    "audio_file": "audio/MRK_010.mp3"
+  },
+  {
+    "chapter_id": "MRK.11.VAHNT",
+    "book": "MRK",
+    "chapter": 11,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.11.VAHNT",
+    "audio_file": "audio/MRK_011.mp3"
+  },
+  {
+    "chapter_id": "MRK.12.VAHNT",
+    "book": "MRK",
+    "chapter": 12,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.12.VAHNT",
+    "audio_file": "audio/MRK_012.mp3"
+  },
+  {
+    "chapter_id": "MRK.13.VAHNT",
+    "book": "MRK",
+    "chapter": 13,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.13.VAHNT",
+    "audio_file": "audio/MRK_013.mp3"
+  },
+  {
+    "chapter_id": "MRK.14.VAHNT",
+    "book": "MRK",
+    "chapter": 14,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.14.VAHNT",
+    "audio_file": "audio/MRK_014.mp3"
+  },
+  {
+    "chapter_id": "MRK.15.VAHNT",
+    "book": "MRK",
+    "chapter": 15,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.15.VAHNT",
+    "audio_file": "audio/MRK_015.mp3"
+  },
+  {
+    "chapter_id": "MRK.16.VAHNT",
+    "book": "MRK",
+    "chapter": 16,
+    "url": "https://www.bible.com/audio-bible/3451/MRK.16.VAHNT",
+    "audio_file": "audio/MRK_016.mp3"
+  },
+  {
+    "chapter_id": "LUK.1.VAHNT",
+    "book": "LUK",
+    "chapter": 1,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.1.VAHNT",
+    "audio_file": "audio/LUK_001.mp3"
+  },
+  {
+    "chapter_id": "LUK.2.VAHNT",
+    "book": "LUK",
+    "chapter": 2,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.2.VAHNT",
+    "audio_file": "audio/LUK_002.mp3"
+  },
+  {
+    "chapter_id": "LUK.3.VAHNT",
+    "book": "LUK",
+    "chapter": 3,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.3.VAHNT",
+    "audio_file": "audio/LUK_003.mp3"
+  },
+  {
+    "chapter_id": "LUK.4.VAHNT",
+    "book": "LUK",
+    "chapter": 4,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.4.VAHNT",
+    "audio_file": "audio/LUK_004.mp3"
+  },
+  {
+    "chapter_id": "LUK.5.VAHNT",
+    "book": "LUK",
+    "chapter": 5,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.5.VAHNT",
+    "audio_file": "audio/LUK_005.mp3"
+  },
+  {
+    "chapter_id": "LUK.6.VAHNT",
+    "book": "LUK",
+    "chapter": 6,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.6.VAHNT",
+    "audio_file": "audio/LUK_006.mp3"
+  },
+  {
+    "chapter_id": "LUK.7.VAHNT",
+    "book": "LUK",
+    "chapter": 7,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.7.VAHNT",
+    "audio_file": "audio/LUK_007.mp3"
+  },
+  {
+    "chapter_id": "LUK.8.VAHNT",
+    "book": "LUK",
+    "chapter": 8,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.8.VAHNT",
+    "audio_file": "audio/LUK_008.mp3"
+  },
+  {
+    "chapter_id": "LUK.9.VAHNT",
+    "book": "LUK",
+    "chapter": 9,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.9.VAHNT",
+    "audio_file": "audio/LUK_009.mp3"
+  },
+  {
+    "chapter_id": "LUK.10.VAHNT",
+    "book": "LUK",
+    "chapter": 10,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.10.VAHNT",
+    "audio_file": "audio/LUK_010.mp3"
+  },
+  {
+    "chapter_id": "LUK.11.VAHNT",
+    "book": "LUK",
+    "chapter": 11,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.11.VAHNT",
+    "audio_file": "audio/LUK_011.mp3"
+  },
+  {
+    "chapter_id": "LUK.12.VAHNT",
+    "book": "LUK",
+    "chapter": 12,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.12.VAHNT",
+    "audio_file": "audio/LUK_012.mp3"
+  },
+  {
+    "chapter_id": "LUK.13.VAHNT",
+    "book": "LUK",
+    "chapter": 13,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.13.VAHNT",
+    "audio_file": "audio/LUK_013.mp3"
+  },
+  {
+    "chapter_id": "LUK.14.VAHNT",
+    "book": "LUK",
+    "chapter": 14,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.14.VAHNT",
+    "audio_file": "audio/LUK_014.mp3"
+  },
+  {
+    "chapter_id": "LUK.15.VAHNT",
+    "book": "LUK",
+    "chapter": 15,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.15.VAHNT",
+    "audio_file": "audio/LUK_015.mp3"
+  },
+  {
+    "chapter_id": "LUK.16.VAHNT",
+    "book": "LUK",
+    "chapter": 16,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.16.VAHNT",
+    "audio_file": "audio/LUK_016.mp3"
+  },
+  {
+    "chapter_id": "LUK.17.VAHNT",
+    "book": "LUK",
+    "chapter": 17,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.17.VAHNT",
+    "audio_file": "audio/LUK_017.mp3"
+  },
+  {
+    "chapter_id": "LUK.18.VAHNT",
+    "book": "LUK",
+    "chapter": 18,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.18.VAHNT",
+    "audio_file": "audio/LUK_018.mp3"
+  },
+  {
+    "chapter_id": "LUK.19.VAHNT",
+    "book": "LUK",
+    "chapter": 19,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.19.VAHNT",
+    "audio_file": "audio/LUK_019.mp3"
+  },
+  {
+    "chapter_id": "LUK.20.VAHNT",
+    "book": "LUK",
+    "chapter": 20,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.20.VAHNT",
+    "audio_file": "audio/LUK_020.mp3"
+  },
+  {
+    "chapter_id": "LUK.21.VAHNT",
+    "book": "LUK",
+    "chapter": 21,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.21.VAHNT",
+    "audio_file": "audio/LUK_021.mp3"
+  },
+  {
+    "chapter_id": "LUK.22.VAHNT",
+    "book": "LUK",
+    "chapter": 22,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.22.VAHNT",
+    "audio_file": "audio/LUK_022.mp3"
+  },
+  {
+    "chapter_id": "LUK.23.VAHNT",
+    "book": "LUK",
+    "chapter": 23,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.23.VAHNT",
+    "audio_file": "audio/LUK_023.mp3"
+  },
+  {
+    "chapter_id": "LUK.24.VAHNT",
+    "book": "LUK",
+    "chapter": 24,
+    "url": "https://www.bible.com/audio-bible/3451/LUK.24.VAHNT",
+    "audio_file": "audio/LUK_024.mp3"
+  },
+  {
+    "chapter_id": "JHN.1.VAHNT",
+    "book": "JHN",
+    "chapter": 1,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.1.VAHNT",
+    "audio_file": "audio/JHN_001.mp3"
+  },
+  {
+    "chapter_id": "JHN.2.VAHNT",
+    "book": "JHN",
+    "chapter": 2,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.2.VAHNT",
+    "audio_file": "audio/JHN_002.mp3"
+  },
+  {
+    "chapter_id": "JHN.3.VAHNT",
+    "book": "JHN",
+    "chapter": 3,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.3.VAHNT",
+    "audio_file": "audio/JHN_003.mp3"
+  },
+  {
+    "chapter_id": "JHN.4.VAHNT",
+    "book": "JHN",
+    "chapter": 4,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.4.VAHNT",
+    "audio_file": "audio/JHN_004.mp3"
+  },
+  {
+    "chapter_id": "JHN.5.VAHNT",
+    "book": "JHN",
+    "chapter": 5,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.5.VAHNT",
+    "audio_file": "audio/JHN_005.mp3"
+  },
+  {
+    "chapter_id": "JHN.6.VAHNT",
+    "book": "JHN",
+    "chapter": 6,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.6.VAHNT",
+    "audio_file": "audio/JHN_006.mp3"
+  },
+  {
+    "chapter_id": "JHN.7.VAHNT",
+    "book": "JHN",
+    "chapter": 7,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.7.VAHNT",
+    "audio_file": "audio/JHN_007.mp3"
+  },
+  {
+    "chapter_id": "JHN.8.VAHNT",
+    "book": "JHN",
+    "chapter": 8,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.8.VAHNT",
+    "audio_file": "audio/JHN_008.mp3"
+  },
+  {
+    "chapter_id": "JHN.9.VAHNT",
+    "book": "JHN",
+    "chapter": 9,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.9.VAHNT",
+    "audio_file": "audio/JHN_009.mp3"
+  },
+  {
+    "chapter_id": "JHN.10.VAHNT",
+    "book": "JHN",
+    "chapter": 10,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.10.VAHNT",
+    "audio_file": "audio/JHN_010.mp3"
+  },
+  {
+    "chapter_id": "JHN.11.VAHNT",
+    "book": "JHN",
+    "chapter": 11,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.11.VAHNT",
+    "audio_file": "audio/JHN_011.mp3"
+  },
+  {
+    "chapter_id": "JHN.12.VAHNT",
+    "book": "JHN",
+    "chapter": 12,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.12.VAHNT",
+    "audio_file": "audio/JHN_012.mp3"
+  },
+  {
+    "chapter_id": "JHN.13.VAHNT",
+    "book": "JHN",
+    "chapter": 13,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.13.VAHNT",
+    "audio_file": "audio/JHN_013.mp3"
+  },
+  {
+    "chapter_id": "JHN.14.VAHNT",
+    "book": "JHN",
+    "chapter": 14,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.14.VAHNT",
+    "audio_file": "audio/JHN_014.mp3"
+  },
+  {
+    "chapter_id": "JHN.15.VAHNT",
+    "book": "JHN",
+    "chapter": 15,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.15.VAHNT",
+    "audio_file": "audio/JHN_015.mp3"
+  },
+  {
+    "chapter_id": "JHN.16.VAHNT",
+    "book": "JHN",
+    "chapter": 16,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.16.VAHNT",
+    "audio_file": "audio/JHN_016.mp3"
+  },
+  {
+    "chapter_id": "JHN.17.VAHNT",
+    "book": "JHN",
+    "chapter": 17,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.17.VAHNT",
+    "audio_file": "audio/JHN_017.mp3"
+  },
+  {
+    "chapter_id": "JHN.18.VAHNT",
+    "book": "JHN",
+    "chapter": 18,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.18.VAHNT",
+    "audio_file": "audio/JHN_018.mp3"
+  },
+  {
+    "chapter_id": "JHN.19.VAHNT",
+    "book": "JHN",
+    "chapter": 19,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.19.VAHNT",
+    "audio_file": "audio/JHN_019.mp3"
+  },
+  {
+    "chapter_id": "JHN.20.VAHNT",
+    "book": "JHN",
+    "chapter": 20,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.20.VAHNT",
+    "audio_file": "audio/JHN_020.mp3"
+  },
+  {
+    "chapter_id": "JHN.21.VAHNT",
+    "book": "JHN",
+    "chapter": 21,
+    "url": "https://www.bible.com/audio-bible/3451/JHN.21.VAHNT",
+    "audio_file": "audio/JHN_021.mp3"
+  }
+]
