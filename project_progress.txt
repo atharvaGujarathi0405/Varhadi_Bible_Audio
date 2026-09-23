@@ -1,0 +1,152 @@
+KISAANDOST / VARHADI ASR PROJECT - PROGRESS LOG
+================================================
+Last updated: 2026-09-23
+
+Project: Region-Adaptive Multimodal AI Assistant for Varhadi-Speaking Farmers
+in Vidarbha, Maharashtra (KisaanDost). Current phase: Experiment 0 only -
+establish a raw pretrained Marathi ASR baseline on Varhadi speech, no
+adaptation, no correction, no fine-tuning.
+
+------------------------------------------------
+1. DOWNLOADER (pre-existing, untouched this project)
+------------------------------------------------
+- downloader.py / browser.py / chapters.py / config.py / progress.py scrape
+  VAHNT (Varhadi-Nagpuri New Testament) audio Bible from bible.com.
+- 89 of 260 chapter MP3s downloaded so far (~162 MB, ~706 minutes), stored in
+  audio/. No transcripts, no timestamps, no speaker IDs exist for this audio.
+- 6 original downloader tests still pass. Never modified.
+
+------------------------------------------------
+2. ASR BASELINE CODE (built this project, isolated in asr_baseline/)
+------------------------------------------------
+Structure:
+  asr_baseline/          config.py, audio_utils.py, model.py, transcribe.py,
+                          evaluate.py, error_analysis.py, utils.py
+  scripts/                validate_asr_dataset.py, run_asr_baseline.py,
+                          generate_asr_report.py
+  asr_metadata.csv        header-only template (audio_path,reference_text,speaker_id)
+                          - no ground truth exists yet
+  asr_outputs/            predictions.csv, metrics.json, per_sample_metrics.csv,
+                          error_analysis.csv, baseline_report.md, plots/
+  requirements-asr.txt    isolated from the downloader's requirements.txt
+  .env                    HF_TOKEN (gitignored, not committed)
+
+Two modes implemented:
+  Mode 1 (transcription-only): works on any audio, no reference needed.
+  Mode 2 (evaluation): WER/CER via jiwer, ONLY computed for rows with a real
+  reference_text in asr_metadata.csv. Never fabricated.
+
+Own resume mechanism via predictions.csv (independent of downloader's
+progress.json). 12 unit tests added (tests/test_asr_*.py), all mocked, no
+model download required. 18/18 total tests passing (6 downloader + 12 ASR).
+
+------------------------------------------------
+3. WSL2 ASR ENVIRONMENT (NeMo requires Linux; Windows pip install unsupported)
+------------------------------------------------
+- Separate venv: .venv-asr-wsl (WSL2 Ubuntu, Python 3.12.3), fully isolated
+  from the downloader's Windows .venv.
+- AI4Bharat NeMo fork installed (nemo-v2 branch, "asr" extras only, not the
+  heavier "all" extras).
+- torch 2.14.0+cpu (CPU-only build deliberately chosen; no NVIDIA GPU on this
+  machine, avoided pulling multi-GB CUDA/cuDNN packages).
+
+Dependency incompatibilities found and fixed (all pins applied via pip in the
+WSL venv; NOT hand-edited into NeMo's own source):
+  - pytorch-lightning pinned to ==2.2.1 (NeMo's own declared floor). Newer
+    releases removed NeptuneLogger, which exp_manager.py imports unconditionally.
+  - datasets upgraded to >=2.20,<3 (was auto-resolved to 2.14.4, which used a
+    pyarrow API removed in the very new pyarrow that also got installed).
+  - numpy.sctypes compatibility shim added in asr_baseline/model.py
+    (_shim_numpy_sctypes) - NeMo's audio loader reads this NumPy 1.x-only
+    attribute; restoring just the two keys it needs avoided downgrading numpy
+    globally (which would fight pandas/scipy's numpy>=2 requirement).
+
+Model-loading fix (in asr_baseline/model.py only):
+  - ASRModel.from_pretrained(MODEL_NAME) is BROKEN for this specific repo: it
+    guesses the checkpoint filename as "{model_name}.nemo", but the actual
+    file in the repo is "indicconformer_stt_mr_hybrid_rnnt_large.nemo" (no
+    "_ctc"). This mismatch sends it down a broken "download whole repo as an
+    already-extracted directory" fallback path.
+  - Fix: hf_hub_download(repo_id=MODEL_NAME, filename=CHECKPOINT_FILENAME)
+    followed by ASRModel.restore_from(restore_path=..., map_location=device).
+    This is what from_pretrained()'s own docstring recommends for a local
+    .nemo file.
+
+transcribe_one() fix (asr_baseline/model.py):
+  - In "ctc" decoder mode this model's transcribe() returns a nested list
+    (e.g. [[' text']]) instead of a flat list of Hypothesis objects. Added a
+    while-unwrap loop. No effect on the actual transcribed words.
+
+Access: the HF repo is gated. User created a HuggingFace token, accepted the
+model's terms, token stored in .env (gitignored) as HF_TOKEN, read via
+os.environ in model.py.
+
+Other environment issues hit and resolved:
+  - WSL DNS was completely broken at the start (systemd-resolved stub had no
+    upstream servers). Fixed by user running (with sudo, outside this
+    session): echo "nameserver 8.8.8.8" > /etc/resolv.conf
+  - WSL's exec layer hung once (HCS_E_CONNECTION_TIMEOUT) after a background
+    job was interrupted mid-session; resolved itself after the machine was
+    left overnight / WSL cold-started fresh.
+
+------------------------------------------------
+4. FIRST REAL TRANSCRIPTION RESULT (2026-09-23)
+------------------------------------------------
+IMPORTANT LIMITATION FOUND: transcribing the full ~8-minute audio/JHN_001.mp3
+in one pass gets OOM-killed. WSL2 defaults to 50% of host RAM; this machine
+has ~16GB total RAM, so WSL2 gets ~7.7GB, and the Conformer encoder's full
+self-attention over an ~8-minute single utterance exceeds that. Confirmed via
+dmesg oom-killer log (process hit ~6GB RSS before being killed).
+
+User chose to prove the pipeline first on a short clip rather than immediately
+fix the memory ceiling. Result, on a 30-second trimmed sample of
+audio/JHN_001.mp3 (asr_audio/JHN_001_sample30s.wav, original mp3 untouched):
+
+  Model:        ai4bharat/indicconformer_stt_mr_hybrid_ctc_rnnt_large (ctc decoder)
+  NeMo:         1.23.0rc0 (AI4Bharat fork)
+  Python:       3.12.3 / torch 2.14.0+cpu / CUDA available: False (no GPU)
+  Audio:        30.00s
+  Inference:    3.75s  ->  realtime factor ~8.0x faster than realtime (CPU)
+
+  RAW ASR OUTPUT (verbatim, no correction/normalization applied):
+  " योहानाची सुवारता अध्याय एक प्रारंभी शब्द होता ह्या सगळ्या जगाच्या
+  बन्याच्या पहिले शब्द होता अन् हा शब्द देवासोबत होता अन् हा शब्दच देव होता
+  अन तोच सुरुवातीपासून देवासोबत होता सगळं काही शब्दापासून निर्माण झालं अन जे
+  काही या जगात निर्माण झालं होत सगळं काही त्याच्यापासूनच निर्माण झालं होत तो
+  शब्द सगळ्या जीवनाचा स््रूप "
+
+  Saved to asr_outputs/predictions.csv (reference column empty - no WER/CER
+  computed, no ground truth exists). No Varhadi correction, no dictionary, no
+  translation, no LLM post-processing applied anywhere in this pipeline.
+
+Qualitative note (not a formal score): this is recognizably John 1:1-4
+("In the beginning was the Word...") in Marathi/Varhadi, with at least one
+visible ASR error near the end ("स््रूप" looks like a garbled "स्वरूप").
+Consistent with an unadapted Marathi model hearing Varhadi speech.
+
+------------------------------------------------
+5. WHAT'S NOT DONE YET / OPEN ITEMS
+------------------------------------------------
+- Full-chapter (multi-minute) inference still OOM-kills on this machine.
+  Not yet fixed. Options on the table (user has not chosen yet):
+    a) Raise WSL2's memory cap via .wslconfig (~12GB) + wsl --shutdown.
+    b) Add audio chunking/stitching logic to asr_baseline (real code change).
+- Batch mode (scripts/run_asr_baseline.py with no --audio flag, over all 89
+  downloaded chapters) has NOT been run yet - explicitly deferred until the
+  first single-file transcription was confirmed working, per user's request
+  to "stop and report before starting batch inference."
+- No manually-transcribed Varhadi reference transcripts exist yet, so WER/CER
+  Mode 2 has never been exercised on real data (only unit-tested with
+  synthetic fixtures).
+- asr_outputs/baseline_report.md has not been generated from a real run yet
+  (scripts/generate_asr_report.py exists and works, just hasn't been pointed
+  at real predictions.csv content beyond the one 30s sample).
+
+------------------------------------------------
+6. SUGGESTED NEXT STEP
+------------------------------------------------
+Decide how to handle full-chapter-length audio (memory cap vs. chunking),
+then run scripts/run_asr_baseline.py in batch mode over the 89 downloaded
+chapters (transcription-only, no reference required) to get a first broad
+look at raw Marathi-on-Varhadi ASR behavior before investing in a manually
+transcribed evaluation set.
