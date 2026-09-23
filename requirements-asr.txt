@@ -1,0 +1,14 @@
+# ASR baseline dependencies (Experiment 0). Separate from requirements.txt (the downloader).
+#
+# Run this in WSL2/Linux, not the Windows venv: NeMo's `pynini` dependency has no
+# Windows wheel, so pip-installing NeMo on native Windows is unsupported.
+#
+# 1) Install the AI4Bharat NeMo fork first (this is not on PyPI as a plain
+#    `nemo_toolkit` install - the checkpoint requires this fork):
+#      git clone https://github.com/AI4Bharat/NeMo.git
+#      cd NeMo && git checkout nemo-v2 && bash reinstall.sh
+# 2) Then, in that same environment, install:
+jiwer>=3.0,<4
+librosa>=0.10,<1
+soundfile>=0.12,<1
+pytest>=8,<9
