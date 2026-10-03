@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from asr_baseline.audio_utils import validate_audio
 from asr_baseline.chunking import ChunkSettings
-from asr_baseline.config import ASR_AUDIO_DIR, MODEL_NAME, PREDICTIONS_PATH
+from asr_baseline.config import ASR_AUDIO_DIR, ASR_METADATA_PATH, MODEL_NAME, PREDICTIONS_PATH
 from config import LOG_DIR
 from asr_baseline.model import load_model
 from asr_baseline.transcribe import PREDICTIONS_FIELDS, run_batch, transcribe_sample
@@ -76,6 +76,8 @@ def main() -> int:
     parser.add_argument("--chunk-sec", type=float, help="Target chunk length (env ASR_CHUNK_SEC, default 20)")
     parser.add_argument("--max-chunk-sec", type=float, help="Max chunk length; longer audio is chunked (env ASR_CHUNK_MAX_SEC, default 30)")
     parser.add_argument("--overlap-sec", type=float, help="Chunk overlap (env ASR_CHUNK_OVERLAP_SEC, default 0)")
+    parser.add_argument("--metadata", type=Path, default=ASR_METADATA_PATH, help="audio_path,reference_text,speaker_id CSV (e.g. data/evaluation/gold_eval.csv)")
+    parser.add_argument("--predictions", type=Path, default=PREDICTIONS_PATH, help="Output/resume CSV for batch mode")
     args = parser.parse_args()
     configure_logging()
     settings = ChunkSettings.from_env(
@@ -85,8 +87,8 @@ def main() -> int:
     if args.audio:
         return run_single(args.audio, settings)
 
-    run_batch(force=args.force, settings=settings)
-    print(f"Predictions written to {PREDICTIONS_PATH}")
+    run_batch(metadata_path=args.metadata, predictions_path=args.predictions, force=args.force, settings=settings)
+    print(f"Predictions written to {args.predictions}")
     return 0
 
 

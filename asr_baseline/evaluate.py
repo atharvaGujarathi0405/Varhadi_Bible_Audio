@@ -84,8 +84,9 @@ def run_evaluation(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Compute WER/CER for predictions that have ground truth")
     parser.add_argument("--predictions", type=Path, default=PREDICTIONS_PATH)
+    parser.add_argument("--metadata", type=Path, default=ASR_METADATA_PATH, help="for speaker_id lookup")
     args = parser.parse_args()
-    metrics = run_evaluation(predictions_path=args.predictions)
+    metrics = run_evaluation(predictions_path=args.predictions, metadata_path=args.metadata)
     print(json.dumps(metrics, ensure_ascii=False, indent=2))
     return 0
 

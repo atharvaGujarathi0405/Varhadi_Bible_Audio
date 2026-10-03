@@ -101,6 +101,12 @@ without redoing finished chunks. Settings can also come from `ASR_CHUNK_SEC`,
 `ASR_CHUNK_MAX_SEC`, `ASR_CHUNK_OVERLAP_SEC`. Measured on `JHN_001` (473.6 s): 19 chunks,
 53.9 s inference, peak RSS 1.74 GB. See `docs/asr_baseline.md` for the stitching strategy.
 
+### Dataset tooling (P1)
+
+`scripts/dataset_tool.py` manages `data/`: the manifest, native-recording intake with consent
+and pseudonymous speaker IDs, speaker-level splits, and the human gold-transcript workflow.
+See `docs/dataset.md`.
+
 ### Ground truth
 
 `asr_metadata.csv` (`audio_path,reference_text,speaker_id`) is currently a header-only

@@ -9,3 +9,11 @@ audio/
 asr_audio/
 .env
 .claude/
+# dataset: audio and private speaker registry stay local; CSV metadata is tracked
+data/raw/
+data/processed/
+data/private/
+data/evaluation/audio/
+# published VAHNT text (licence unverified, like audio/): keep local, never push
+data/transcripts/vahnt_text/
+data/transcripts/alignments/

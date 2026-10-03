@@ -1,0 +1,28 @@
+prompt_id,type,domain,topic,text,review_status,notes
+E01,elicitation,general,daily_life,तुमच्या गावाबद्दल आणि तुमच्या रोजच्या दिवसाबद्दल दोन-तीन मिनिटे सांगा.,draft_needs_native_review,Speaker answers freely in their own Varhadi; transcript written afterwards and reviewed
+E02,elicitation,agriculture,crop_choice,या हंगामात तुम्ही कोणती पिके लावली आणि का?,draft_needs_native_review,
+E03,elicitation,agriculture,pest_disease,कपाशीवर येणाऱ्या किडी आणि रोगांबद्दल तुमचा अनुभव सांगा.,draft_needs_native_review,
+E04,elicitation,agriculture,crop_practice,सोयाबीन पेरणीपासून काढणीपर्यंत तुम्ही काय काय करता ते सांगा.,draft_needs_native_review,
+E05,elicitation,agriculture,crop_practice,संत्र्याच्या बागेची काळजी तुम्ही कशी घेता?,draft_needs_native_review,
+E06,elicitation,agriculture,pest_disease,तुरीच्या पिकात कोणत्या अडचणी येतात?,draft_needs_native_review,
+E07,elicitation,agriculture,irrigation,तुमच्याकडे पाणी आणि सिंचनाची व्यवस्था कशी आहे?,draft_needs_native_review,
+E08,elicitation,agriculture,fertilizer,तुम्ही खत कधी आणि किती देता ते सांगा.,draft_needs_native_review,
+E09,elicitation,agriculture,government_scheme,सरकारी कृषी योजनांचा तुम्हाला काय अनुभव आला?,draft_needs_native_review,
+E10,elicitation,agriculture,weather,पाऊस आणि हवामानामुळे पिकांवर काय परिणाम होतो?,draft_needs_native_review,
+E11,elicitation,agriculture,market,बाजारात माल विकताना काय अडचणी येतात?,draft_needs_native_review,
+R01,read,agriculture,pest,माझ्या कपाशीवर बोंडअळी आली आहे; काय करावे?,draft_needs_native_review,Standard Marathi draft: a native Varhadi speaker must rewrite it into natural Varhadi before recording
+R02,read,agriculture,symptom,सोयाबीनची पाने पिवळी पडत आहेत.,draft_needs_native_review,
+R03,read,agriculture,symptom,संत्र्याच्या झाडांना फळगळ होत आहे.,draft_needs_native_review,
+R04,read,agriculture,disease,तुरीवर मर रोग आला आहे का?,draft_needs_native_review,
+R05,read,agriculture,fertilizer,कपाशीला कोणते खत द्यावे?,draft_needs_native_review,
+R06,read,agriculture,government_scheme,ठिबक सिंचनासाठी अनुदान मिळते का?,draft_needs_native_review,
+R07,read,agriculture,government_scheme,पीक विमा योजनेसाठी अर्ज कसा करायचा?,draft_needs_native_review,
+R08,read,agriculture,pest,पांढरी माशी कशी ओळखायची?,draft_needs_native_review,
+R09,read,agriculture,fertilizer,युरिया किती प्रमाणात टाकावा?,draft_needs_native_review,
+R10,read,agriculture,weather,उद्या पाऊस पडणार आहे का?,draft_needs_native_review,
+R11,read,agriculture,pest,मावा आणि तुडतुड्यांचा प्रादुर्भाव वाढला आहे.,draft_needs_native_review,
+R12,read,agriculture,pest,सोयाबीनवर खोडमाशी दिसत आहे.,draft_needs_native_review,
+R13,read,agriculture,market,आज कापसाचा बाजारभाव किती आहे?,draft_needs_native_review,
+R14,read,agriculture,seed,चांगले बियाणे कुठे मिळेल?,draft_needs_native_review,
+R15,read,agriculture,safety,फवारणी करताना कोणती काळजी घ्यावी?,draft_needs_native_review,
+R16,read,agriculture,numbers,मी दोन एकरात तीन क्विंटल सोयाबीन काढले.,draft_needs_native_review,Covers numbers and units
