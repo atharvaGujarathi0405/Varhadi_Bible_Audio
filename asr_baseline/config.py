@@ -26,3 +26,5 @@ PER_SAMPLE_METRICS_PATH = ASR_OUTPUTS_DIR / "per_sample_metrics.csv"
 ERROR_ANALYSIS_PATH = ASR_OUTPUTS_DIR / "error_analysis.csv"
 REPORT_PATH = ASR_OUTPUTS_DIR / "baseline_report.md"
 PLOTS_DIR = ASR_OUTPUTS_DIR / "plots"
+CHUNKS_DIR = ASR_OUTPUTS_DIR / "chunks"  # per-file chunk metadata + raw chunk outputs (resume state)
+CHUNK_WORK_DIR = ASR_AUDIO_DIR / "chunks"  # temporary chunk WAVs, deleted after each chunk

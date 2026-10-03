@@ -71,8 +71,8 @@ downloader:
 
 ```bash
 wsl
-cd /mnt/e/Varhadi_Bible_Audio
-python3 -m venv .venv-asr && source .venv-asr/bin/activate
+cd /mnt/e/KisaanDost
+python3 -m venv .venv-asr-wsl && source .venv-asr-wsl/bin/activate
 pip install -r requirements-asr.txt
 # then install the AI4Bharat NeMo fork per requirements-asr.txt's comments
 ```
@@ -83,11 +83,23 @@ pip install -r requirements-asr.txt
 python scripts/validate_asr_dataset.py                 # inspect audio + reference availability
 python scripts/run_asr_baseline.py --audio audio/example.mp3   # single file
 python scripts/run_asr_baseline.py                      # batch, resumable via predictions.csv
-python scripts/run_asr_baseline.py --force               # re-run everything
+python scripts/run_asr_baseline.py --force               # re-run everything (also clears chunk resume state)
+python scripts/run_asr_baseline.py --chunk-sec 20 --max-chunk-sec 30 --overlap-sec 0  # chunking knobs
 python -m asr_baseline.evaluate --predictions asr_outputs/predictions.csv  # WER/CER (only for rows with a reference)
 python -m asr_baseline.error_analysis
 python scripts/generate_asr_report.py
 ```
+
+### Chunked inference (long audio)
+
+A full ~8-minute chapter OOM-kills the encoder on CPU in one pass. Audio longer than
+`--max-chunk-sec` (default 30 s) is split at the quietest point between `--chunk-sec` and
+`--max-chunk-sec`, each chunk is transcribed with the unchanged model, and the raw outputs are
+stitched in order. Per-chunk metadata and raw outputs go to `asr_outputs/chunks/<stem>.csv`,
+which is also the per-chunk resume state: a crash or a failed chunk is retried on the next run
+without redoing finished chunks. Settings can also come from `ASR_CHUNK_SEC`,
+`ASR_CHUNK_MAX_SEC`, `ASR_CHUNK_OVERLAP_SEC`. Measured on `JHN_001` (473.6 s): 19 chunks,
+53.9 s inference, peak RSS 1.74 GB. See `docs/asr_baseline.md` for the stitching strategy.
 
 ### Ground truth
 

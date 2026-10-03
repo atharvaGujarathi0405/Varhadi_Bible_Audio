@@ -6,7 +6,8 @@ import time
 from pathlib import Path
 
 from .audio_utils import ensure_wav_copy, get_duration, validate_audio
-from .config import ASR_AUDIO_DIR, ASR_METADATA_PATH, AUDIO_DIR, PREDICTIONS_PATH
+from .chunking import ChunkSettings, transcribe_chunked
+from .config import ASR_AUDIO_DIR, ASR_METADATA_PATH, AUDIO_DIR, CHUNK_WORK_DIR, CHUNKS_DIR, PREDICTIONS_PATH
 from .model import load_model, transcribe_one
 from .utils import append_csv_row, read_asr_metadata
 
@@ -48,14 +49,28 @@ def already_done(predictions_path: Path) -> set[str]:
         }
 
 
-def transcribe_sample(loaded, audio_path: Path, cache_dir: Path) -> tuple[str, float, float]:
+def transcribe_sample(
+    loaded,
+    audio_path: Path,
+    cache_dir: Path,
+    settings: ChunkSettings | None = None,
+    chunks_dir: Path = CHUNKS_DIR,
+) -> tuple[str, float, float]:
+    """Audio up to `settings.max_sec` goes through transcribe_one unchanged; longer audio is
+    chunked (see chunking.py) because a full chapter OOM-kills the encoder on CPU."""
+    settings = settings or ChunkSettings.from_env()
     valid, reason = validate_audio(audio_path)
     if not valid:
         raise RuntimeError(reason)
     duration = get_duration(audio_path)
     wav_path = ensure_wav_copy(audio_path, cache_dir)
     start = time.monotonic()
-    prediction = transcribe_one(loaded, str(wav_path))
+    if duration <= settings.max_sec:
+        prediction = transcribe_one(loaded, str(wav_path))
+    else:
+        prediction = transcribe_chunked(
+            loaded, wav_path, chunks_dir / f"{audio_path.stem}.csv", cache_dir / CHUNK_WORK_DIR.name, settings
+        )
     inference_time = time.monotonic() - start
     return prediction, duration, inference_time
 
@@ -66,10 +81,15 @@ def run_batch(
     predictions_path: Path = PREDICTIONS_PATH,
     cache_dir: Path = ASR_AUDIO_DIR,
     force: bool = False,
+    settings: ChunkSettings | None = None,
+    chunks_dir: Path = CHUNKS_DIR,
 ) -> None:
     samples = discover_samples(metadata_path, audio_dir)
     if force and predictions_path.exists():
         predictions_path.unlink()
+    if force:
+        for chunk_csv in chunks_dir.glob("*.csv"):
+            chunk_csv.unlink()
     done = set() if force else already_done(predictions_path)
 
     loaded = load_model()
@@ -88,7 +108,7 @@ def run_batch(
             "error_message": "",
         }
         try:
-            prediction, duration, inference_time = transcribe_sample(loaded, audio_path, cache_dir)
+            prediction, duration, inference_time = transcribe_sample(loaded, audio_path, cache_dir, settings, chunks_dir)
             row.update(
                 prediction=prediction,
                 duration_sec=f"{duration:.3f}",
