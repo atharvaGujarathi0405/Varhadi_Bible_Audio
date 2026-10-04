@@ -10,12 +10,14 @@ data/
   processed/recordings/<VH_S###>/  16 kHz mono WAV used for ASR             (gitignored)
   private/speaker_registry.csv     pseudonym <-> keyed hash, no raw PII     (gitignored)
   metadata/manifest.csv            one row per utterance                    (tracked)
-  transcripts/gold_transcripts.csv human review workflow                    (tracked)
+  transcripts/gold_transcripts.csv human review workflow                    (gitignored)
   splits/{train,validation,test}.csv                                        (tracked)
-  evaluation/gold_eval.csv         verified references, asr_metadata format (tracked)
+  evaluation/gold_eval.csv         verified references, asr_metadata format (gitignored)
   evaluation/audio/                exported verified clips                  (gitignored)
   prompts/recording_prompts.csv    elicitation + read prompts               (tracked)
 ```
+The GitHub remote is public, so transcript text (VAHNT text with an unverified licence, and native
+speakers' words) never goes into git. Back up `data/transcripts/` and `data/evaluation/` separately.
 VAHNT audio stays in `audio/`. The downloader owns it, and the manifest just points to it.
 
 ## Manifest columns

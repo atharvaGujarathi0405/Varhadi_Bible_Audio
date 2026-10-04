@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from asr_baseline.utils import repo_path
 from config import ROOT_DIR  # reuse the downloader's root; do not duplicate
 
 DATA_DIR = ROOT_DIR / "data"
@@ -21,12 +22,7 @@ REGISTRY = Path("private/speaker_registry.csv")  # gitignored; pseudonym <-> key
 SUBDIRS = ["raw", "processed", "transcripts", "metadata", "splits", "evaluation", "private"]
 
 
-def rel(path: Path) -> str:
-    """Repo-relative POSIX path when possible, so CSVs work from both Windows and WSL."""
-    try:
-        return Path(path).resolve().relative_to(ROOT_DIR).as_posix()
-    except ValueError:
-        return Path(path).as_posix()
+rel = repo_path  # one implementation, shared with asr_baseline
 
 
 def resolve(path: str) -> Path:

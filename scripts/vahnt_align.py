@@ -26,13 +26,28 @@ SEGMENT_FIELDS = ["segment_id", "audio_path", "start_sec", "end_sec", "units", "
 def cmd_fetch_text(args):
     from varhadi_data.vahnt_text import fetch_chapter_text
 
+    from chapters import chapter_from_id
+
+    failed = []
     for index, chapter_id in enumerate(args.chapter):
+        existing = DATA_DIR / VAHNT_TEXT / f"{Path(chapter_from_id(chapter_id).filename).stem}.json"
+        if existing.exists() and not args.force:
+            print(f"{chapter_id}: already fetched, skipping")
+            continue
         if index:
             time.sleep(args.delay)  # polite, sequential
-        out = fetch_chapter_text(chapter_id, DATA_DIR / VAHNT_TEXT, headless=not args.headed)
+        try:
+            out = fetch_chapter_text(chapter_id, DATA_DIR / VAHNT_TEXT, headless=not args.headed)
+        except Exception as error:
+            failed.append(chapter_id)
+            print(f"{chapter_id}: FAILED {type(error).__name__}: {str(error).splitlines()[0]}")
+            continue
         units = json.loads(out.read_text(encoding="utf-8"))["units"]
         print(f"{chapter_id}: {sum(u['kind'] == 'verse' for u in units)} verses, "
               f"{sum(u['kind'] == 'heading' for u in units)} headings -> {rel(out)}")
+    if failed:
+        print(f"{len(failed)} failed (rerun to retry): {' '.join(failed)}")
+        return 1
 
 
 def cmd_align(args):
@@ -43,17 +58,32 @@ def cmd_align(args):
     from asr_baseline.utils import write_csv
     from varhadi_data.align import align_chapter
 
+    if args.all:
+        args.chapter = sorted(path.stem for path in (DATA_DIR / VAHNT_TEXT).glob("*.json"))
+    todo = [stem for stem in args.chapter if args.force or not (DATA_DIR / ALIGNMENTS / f"{stem}.csv").exists()]
+    print(f"{len(todo)} to align, {len(args.chapter) - len(todo)} already aligned")
+    if not todo:
+        return 0
     loaded = load_model()
-    for stem in args.chapter:
-        text = json.loads((DATA_DIR / VAHNT_TEXT / f"{stem}.json").read_text(encoding="utf-8"))
-        audio = AUDIO_DIR / f"{stem}.mp3"
-        wav = ensure_wav_copy(audio, ASR_AUDIO_DIR)
-        start = time.monotonic()
-        segments = align_chapter(loaded, wav, text["units"], ChunkSettings.from_env(), max_sec=args.max_sec)
+    failed = []
+    for stem in todo:
+        try:
+            text = json.loads((DATA_DIR / VAHNT_TEXT / f"{stem}.json").read_text(encoding="utf-8"))
+            audio = AUDIO_DIR / f"{stem}.mp3"
+            wav = ensure_wav_copy(audio, ASR_AUDIO_DIR)
+            start = time.monotonic()
+            segments = align_chapter(loaded, wav, text["units"], ChunkSettings.from_env(), max_sec=args.max_sec)
+        except Exception as error:
+            failed.append(stem)
+            logging.exception("%s: alignment failed", stem)
+            continue
         rows = [{"segment_id": f"{stem}_a{i:03d}", "audio_path": rel(audio), **seg} for i, seg in enumerate(segments)]
         out = DATA_DIR / ALIGNMENTS / f"{stem}.csv"
-        write_csv(out, rows, SEGMENT_FIELDS)
-        print(f"{stem}: {len(rows)} segments in {time.monotonic() - start:.1f}s -> {rel(out)}")
+        write_csv(out, rows, SEGMENT_FIELDS)  # written only on success, so a rerun retries failures
+        print(f"{stem}: {len(rows)} segments in {time.monotonic() - start:.1f}s -> {rel(out)}", flush=True)
+    if failed:
+        print(f"{len(failed)} failed (rerun to retry): {' '.join(failed)}")
+        return 1
 
 
 def main() -> int:
@@ -63,9 +93,12 @@ def main() -> int:
     fetch.add_argument("chapter", nargs="+")
     fetch.add_argument("--delay", type=float, default=2.0)
     fetch.add_argument("--headed", action="store_true")
+    fetch.add_argument("--force", action="store_true", help="refetch chapters already saved")
     fetch.set_defaults(fn=cmd_fetch_text)
     align = sub.add_parser("align", help="align fetched text to audio, e.g. JHN_001")
-    align.add_argument("chapter", nargs="+")
+    align.add_argument("chapter", nargs="*")
+    align.add_argument("--all", action="store_true", help="every chapter with fetched text")
+    align.add_argument("--force", action="store_true", help="re-align chapters already aligned")
     align.add_argument("--max-sec", type=float, default=20.0, help="max segment length")
     align.set_defaults(fn=cmd_align)
     args = parser.parse_args()

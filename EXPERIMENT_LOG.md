@@ -38,3 +38,15 @@ Every entry records only measured results. Unmeasured = PENDING, unavailable = N
 - **QUALITATIVE OBSERVATION:** the text/ASR differences are mostly systematic Varhadi-vs-Marathi forms (काई/काही, नाई/नाही, त्याले/त्याला, पयले/पहिले).
 - **Limitations:** no human listening check yet. The published text is unverified against the narration. The CER against the published text is NOT a verified baseline metric. Only one chapter has been tried.
 - **Next step:** human spot-check a sample of segments, then scale to the downloaded chapters and import them as pending_review gold rows.
+
+## Exp 0.3: Raw baseline over all downloaded VAHNT chapters
+
+- **Date:** 2026-10-04 (started 2026-10-03, stopped at 41 files and resumed the next morning)
+- **Objective:** Raw pretrained-Marathi transcriptions of every downloaded Varhadi chapter, for error analysis and as the baseline side of later comparisons. No correction, normalisation or fine-tuning.
+- **Dataset:** 89 VAHNT chapters (705.9 min, 208–880 s each), speaker unknown, general scripture speech (not agricultural).
+- **Model:** same as Exp 0.1. Chunked 20/30/0 (Exp 0.2).
+- **Result:** 89/89 chapters transcribed, 0 failed, 0 empty outputs, 1,771 chunks. Throughput, measured on the 87 chapters that did not reuse earlier chunks: 689.0 min of audio in 72.6 min of inference (~9.5x realtime overall, per-chapter median 10.3x, range 4.4–11.5x). The slowest chapters overlapped with other jobs running on the same CPU. Outputs: `asr_outputs/predictions.csv`, `asr_outputs/chunks/`, `asr_outputs/baseline_report.md`.
+- **WER/CER:** NOT AVAILABLE. No verified references yet; `metrics.json` records 0 evaluated samples.
+- **Pipeline fix found here:** file-level resume compared raw path strings, so `JHN_001` had been recorded twice (once from a single-file run, once from the batch), which inflated the report to 91 files and 714.3 min. Paths are now stored repo-relative and normalised on resume. The duplicate row had identical text and was removed, keeping the original row with its real 53.9 s timing.
+- **Limitations:** transcription only; scripture domain; a single unknown narrator (or narrators), so it says nothing about speaker variation.
+- **Next step:** align the published text (P1b) to obtain candidate references, then human review.

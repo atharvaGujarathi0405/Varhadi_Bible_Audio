@@ -161,3 +161,21 @@ def test_withdraw_deletes_all_speaker_data_and_retires_id(tmp_path):
     assert gold.read_gold(data) == []
     # pseudonym retired, not reused, even if the same person registers again later
     assert register(tmp_path, key="alice", name="c.wav")["speaker_id"] == "VH_S003"
+
+
+def test_import_alignments_queues_published_text_for_review(tmp_path):
+    (tmp_path / "align").mkdir()
+    (tmp_path / "text").mkdir()
+    (tmp_path / "text" / "JHN_001.json").write_text('{"url": "https://www.bible.com/bible/3451/JHN.1.VAHNT"}', encoding="utf-8")
+    (tmp_path / "align" / "JHN_001.csv").write_text(
+        "segment_id,audio_path,start_sec,end_sec,units,n_headings,text,align_score,raw_asr,cer_vs_raw_asr\n"
+        "JHN_001_a000,audio/JHN_001.mp3,6.320,19.620,JHN.1.1..JHN.1.2,1,पयले शब्द होता,-0.2854,पहिले शब्द होता,0.04\n",
+        encoding="utf-8",
+    )
+    rows = gold.import_alignments([], tmp_path / "align", tmp_path / "text")
+    [row] = rows
+    assert row["review_status"] == "pending_review"  # never auto-verified
+    assert row["corrected"] == "पयले शब्द होता" and row["raw_asr"] == "पहिले शब्द होता"
+    assert row["provenance"].startswith("vahnt_text_align:https://www.bible.com/") and "align_score=-0.2854" in row["provenance"]
+    row["review_status"], row["reviewer"] = "verified", "AG"
+    assert gold.import_alignments(rows, tmp_path / "align", tmp_path / "text") == rows  # no overwrite

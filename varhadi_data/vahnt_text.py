@@ -95,7 +95,8 @@ def fetch_chapter_text(chapter_id: str, out_dir: Path, headless: bool = True) ->
         try:
             page = browser.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=60_000)
-            page.wait_for_selector("[data-usfm*='.1.']", timeout=30_000)  # verse markup rendered
+            # any verse of this chapter; not an exact "X.N.1" match, which misses a bridged first verse ("X.N.1+X.N.2")
+            page.wait_for_selector(f"[data-usfm^='{chapter.book}.{chapter.number}.']", timeout=30_000)
             html = page.content()
         finally:
             browser.close()

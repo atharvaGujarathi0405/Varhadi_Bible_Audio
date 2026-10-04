@@ -112,6 +112,38 @@ def seed_from_chunks(rows: list[dict], chunks_dir: Path, audio_dir: Path) -> lis
     return rows + added
 
 
+def import_alignments(rows: list[dict], alignments_dir: Path, text_dir: Path) -> list[dict]:
+    """Queue aligned VAHNT segments (scripts/vahnt_align.py) for human review.
+
+    `corrected` is pre-filled with the PUBLISHED text as a candidate reference: the reviewer
+    must confirm it matches what the narrator actually says, and fix it where it does not.
+    Existing segment_ids are left untouched, so re-importing never overwrites a review.
+    """
+    import json
+
+    existing = {row["segment_id"] for row in rows}
+    added = []
+    for alignment_csv in sorted(alignments_dir.glob("*.csv")):
+        source = json.loads((text_dir / f"{alignment_csv.stem}.json").read_text(encoding="utf-8"))
+        with alignment_csv.open(encoding="utf-8", newline="") as handle:
+            for seg in csv.DictReader(handle):
+                if seg["segment_id"] in existing:
+                    continue
+                added.append(
+                    new_row(
+                        seg["segment_id"],
+                        seg["audio_path"],
+                        "unknown",
+                        seg["start_sec"],
+                        seg["end_sec"],
+                        raw_asr=seg["raw_asr"],
+                        corrected=seg["text"],
+                        provenance=f"vahnt_text_align:{source['url']};align_score={seg['align_score']}",
+                    )
+                )
+    return rows + added
+
+
 def review(rows: list[dict], segment_id: str, corrected: str, reviewer: str, status: str) -> list[dict]:
     matches = [row for row in rows if row["segment_id"] == segment_id]
     if not matches:

@@ -3,6 +3,17 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+from config import ROOT_DIR
+
+
+def repo_path(path) -> str:
+    """Repo-relative POSIX path when possible, so the same file always has one spelling
+    (resume keys, CSVs readable from both Windows and WSL)."""
+    try:
+        return Path(path).resolve().relative_to(ROOT_DIR).as_posix()
+    except ValueError:
+        return Path(path).as_posix()
+
 
 def read_asr_metadata(path: Path) -> list[dict]:
     with path.open(encoding="utf-8", newline="") as source:

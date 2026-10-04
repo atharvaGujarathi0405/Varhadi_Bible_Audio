@@ -33,3 +33,18 @@ def test_discover_samples_falls_back_to_directory_scan_when_metadata_empty(tmp_p
     samples = discover_samples(metadata_path=metadata_path, audio_dir=audio_dir)
     assert len(samples) == 2
     assert all(sample["reference_text"] == "" for sample in samples)
+
+
+def test_already_done_treats_absolute_and_relative_spellings_as_one_file(tmp_path):
+    from asr_baseline.transcribe import already_done
+    from asr_baseline.utils import repo_path
+    from config import ROOT_DIR
+
+    predictions = tmp_path / "predictions.csv"
+    predictions.write_text(
+        "audio_path,reference,prediction,duration_sec,inference_time_sec,status,error_message\n"
+        f"{ROOT_DIR / 'audio' / 'JHN_001.mp3'},,x,1,1,ok,\n",
+        encoding="utf-8",
+    )
+    assert repo_path("audio/JHN_001.mp3") in already_done(predictions)
+    assert repo_path(ROOT_DIR / "audio" / "JHN_001.mp3") == "audio/JHN_001.mp3"

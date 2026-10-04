@@ -15,7 +15,7 @@ from asr_baseline.config import ASR_AUDIO_DIR, ASR_METADATA_PATH, MODEL_NAME, PR
 from config import LOG_DIR
 from asr_baseline.model import load_model
 from asr_baseline.transcribe import PREDICTIONS_FIELDS, run_batch, transcribe_sample
-from asr_baseline.utils import append_csv_row
+from asr_baseline.utils import append_csv_row, repo_path
 
 
 def configure_logging() -> None:
@@ -39,7 +39,7 @@ def run_single(audio_path: Path, settings: ChunkSettings) -> int:
     append_csv_row(
         PREDICTIONS_PATH,
         {
-            "audio_path": str(audio_path),
+            "audio_path": repo_path(audio_path),
             "reference": "",
             "prediction": prediction,
             "duration_sec": f"{duration:.3f}",

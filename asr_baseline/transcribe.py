@@ -9,7 +9,7 @@ from .audio_utils import ensure_wav_copy, get_duration, validate_audio
 from .chunking import ChunkSettings, transcribe_chunked
 from .config import ASR_AUDIO_DIR, ASR_METADATA_PATH, AUDIO_DIR, CHUNK_WORK_DIR, CHUNKS_DIR, PREDICTIONS_PATH
 from .model import load_model, transcribe_one
-from .utils import append_csv_row, read_asr_metadata
+from .utils import append_csv_row, read_asr_metadata, repo_path
 
 PREDICTIONS_FIELDS = [
     "audio_path",
@@ -43,7 +43,7 @@ def already_done(predictions_path: Path) -> set[str]:
         return set()
     with predictions_path.open(encoding="utf-8", newline="") as source:
         return {
-            row["audio_path"]
+            repo_path(row["audio_path"])  # normalise legacy absolute/relative spellings
             for row in csv.DictReader(source)
             if row.get("status") == "ok"
         }
@@ -95,11 +95,11 @@ def run_batch(
     loaded = load_model()
     for sample in samples:
         audio_path = Path(sample["audio_path"])
-        if str(audio_path) in done:
+        if repo_path(audio_path) in done:
             logging.info("Skipping already-transcribed %s", audio_path)
             continue
         row = {
-            "audio_path": str(audio_path),
+            "audio_path": repo_path(audio_path),
             "reference": sample.get("reference_text", ""),
             "prediction": "",
             "duration_sec": "",

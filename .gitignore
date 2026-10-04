@@ -13,7 +13,7 @@ asr_audio/
 data/raw/
 data/processed/
 data/private/
-data/evaluation/audio/
-# published VAHNT text (licence unverified, like audio/): keep local, never push
-data/transcripts/vahnt_text/
-data/transcripts/alignments/
+# transcripts and evaluation sets stay local: the GitHub remote is PUBLIC, VAHNT text has an
+# unverified licence, and native speakers did not consent to public release of their transcripts
+data/transcripts/
+data/evaluation/

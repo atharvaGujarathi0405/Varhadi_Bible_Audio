@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from asr_baseline.config import AUDIO_DIR, CHUNKS_DIR
 from varhadi_data import gold
-from varhadi_data.config import DATA_DIR, SUBDIRS
+from varhadi_data.config import ALIGNMENTS, DATA_DIR, SUBDIRS, VAHNT_TEXT
 from varhadi_data.manifest import (
     ALLOWED,
     assign_splits,
@@ -97,6 +97,13 @@ def cmd_gold_seed(_):
     print(f"Added {len(seeded) - len(rows)} pending segments from {CHUNKS_DIR}")
 
 
+def cmd_gold_import_alignments(_):
+    rows = gold.read_gold()
+    imported = gold.import_alignments(rows, DATA_DIR / ALIGNMENTS, DATA_DIR / VAHNT_TEXT)
+    gold.write_gold(imported)
+    print(f"Queued {len(imported) - len(rows)} aligned VAHNT segments for review (pending_review)")
+
+
 def cmd_gold_review(args):
     gold.write_gold(gold.review(gold.read_gold(), args.segment_id, args.corrected, args.reviewer, args.status))
     print(f"{args.segment_id} -> {args.status}")
@@ -135,6 +142,10 @@ def main() -> int:
     sub.add_parser("check", help="validate manifest, gold transcripts and speaker leakage").set_defaults(fn=cmd_check)
     sub.add_parser("stats", help="dataset summary").set_defaults(fn=cmd_stats)
     sub.add_parser("gold-seed", help="queue ASR chunks for human review").set_defaults(fn=cmd_gold_seed)
+
+    sub.add_parser(
+        "gold-import-alignments", help="queue aligned VAHNT segments (published text) for review"
+    ).set_defaults(fn=cmd_gold_import_alignments)
 
     rv = sub.add_parser("gold-review", help="record a human review of one segment")
     rv.add_argument("--segment-id", required=True)

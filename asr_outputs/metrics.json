@@ -1,0 +1,8 @@
+{
+  "model": "ai4bharat/indicconformer_stt_mr_hybrid_ctc_rnnt_large",
+  "dataset_size": 0,
+  "evaluated_samples": 0,
+  "wer": null,
+  "cer": null,
+  "total_predictions": 90
+}
