@@ -15,6 +15,16 @@ def repo_path(path) -> str:
         return Path(path).as_posix()
 
 
+def strip_punctuation(text: str) -> str:
+    """Drop Unicode punctuation/symbols (categories P*/S*) and collapse whitespace. Keeps
+    letters, Devanagari matras/virama and digits (a regex \w would strip combining marks).
+    The ONLY normalisation applied before scoring: no spelling or dialect changes."""
+    import unicodedata
+
+    chars = (" " if unicodedata.category(c)[0] in "PS" else c for c in text)
+    return " ".join("".join(chars).split())
+
+
 def read_asr_metadata(path: Path) -> list[dict]:
     with path.open(encoding="utf-8", newline="") as source:
         rows = list(csv.DictReader(source))

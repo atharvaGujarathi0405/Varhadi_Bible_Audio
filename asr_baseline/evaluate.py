@@ -6,9 +6,13 @@ import json
 from pathlib import Path
 
 from .config import ASR_METADATA_PATH, METRICS_PATH, MODEL_NAME, PER_SAMPLE_METRICS_PATH, PREDICTIONS_PATH
-from .utils import write_csv
+from .utils import strip_punctuation, write_csv
 
-PER_SAMPLE_FIELDS = ["audio_path", "reference", "prediction", "wer", "cer", "duration_sec", "speaker_id"]
+PER_SAMPLE_FIELDS = [
+    "audio_path", "reference", "prediction", "wer", "cer",
+    "substitutions", "deletions", "insertions", "reference_words", "duration_sec", "speaker_id",
+]
+EMPTY = {"wer": None, "cer": None, "substitutions": None, "deletions": None, "insertions": None, "reference_words": 0}
 
 
 def load_predictions(path: Path) -> list[dict]:
@@ -22,20 +26,29 @@ def evaluable_rows(rows: list[dict]) -> list[dict]:
     return [row for row in rows if row.get("reference", "").strip() and row.get("status") == "ok"]
 
 
-def compute_metrics(rows: list[dict]) -> dict:
-    if not rows:
-        return {"model": MODEL_NAME, "dataset_size": 0, "evaluated_samples": 0, "wer": None, "cer": None}
+def _scores(references: list[str], predictions: list[str]) -> dict:
+    """Corpus-level WER/CER and edit counts. Both sides get the same punctuation stripping
+    (strip_punctuation) and nothing else."""
     import jiwer
 
-    references = [row["reference"] for row in rows]
-    predictions = [row["prediction"] for row in rows]
+    references = [strip_punctuation(text) for text in references]
+    predictions = [strip_punctuation(text) for text in predictions]
+    words = jiwer.process_words(references, predictions)
     return {
-        "model": MODEL_NAME,
-        "dataset_size": len(rows),
-        "evaluated_samples": len(rows),
-        "wer": jiwer.wer(references, predictions),
-        "cer": jiwer.cer(references, predictions),
+        "wer": words.wer,
+        "cer": jiwer.process_characters(references, predictions).cer,
+        "substitutions": words.substitutions,
+        "deletions": words.deletions,
+        "insertions": words.insertions,
+        "reference_words": words.hits + words.substitutions + words.deletions,
     }
+
+
+def compute_metrics(rows: list[dict]) -> dict:
+    base = {"model": MODEL_NAME, "dataset_size": len(rows), "evaluated_samples": len(rows)}
+    if not rows:
+        return {**base, **EMPTY}
+    return {**base, **_scores([row["reference"] for row in rows], [row["prediction"] for row in rows])}
 
 
 def _speaker_lookup(metadata_path: Path) -> dict[str, str]:
@@ -46,22 +59,18 @@ def _speaker_lookup(metadata_path: Path) -> dict[str, str]:
 
 
 def per_sample_metrics(rows: list[dict], speaker_by_path: dict[str, str]) -> list[dict]:
-    import jiwer
-
-    out = []
-    for row in rows:
-        out.append(
-            {
-                "audio_path": row["audio_path"],
-                "reference": row["reference"],
-                "prediction": row["prediction"],
-                "wer": jiwer.wer(row["reference"], row["prediction"]),
-                "cer": jiwer.cer(row["reference"], row["prediction"]),
-                "duration_sec": row.get("duration_sec", ""),
-                "speaker_id": speaker_by_path.get(row["audio_path"], ""),
-            }
-        )
-    return out
+    """Raw reference and prediction are kept as-is; scores use the normalised text."""
+    return [
+        {
+            "audio_path": row["audio_path"],
+            "reference": row["reference"],
+            "prediction": row["prediction"],
+            **_scores([row["reference"]], [row["prediction"]]),
+            "duration_sec": row.get("duration_sec", ""),
+            "speaker_id": speaker_by_path.get(row["audio_path"], ""),
+        }
+        for row in rows
+    ]
 
 
 def run_evaluation(

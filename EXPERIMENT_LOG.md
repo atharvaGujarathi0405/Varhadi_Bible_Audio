@@ -50,3 +50,29 @@ Every entry records only measured results. Unmeasured = PENDING, unavailable = N
 - **Pipeline fix found here:** file-level resume compared raw path strings, so `JHN_001` had been recorded twice (once from a single-file run, once from the batch), which inflated the report to 91 files and 714.3 min. Paths are now stored repo-relative and normalised on resume. The duplicate row had identical text and was removed, keeping the original row with its real 53.9 s timing.
 - **Limitations:** transcription only; scripture domain; a single unknown narrator (or narrators), so it says nothing about speaker variation.
 - **Next step:** align the published text (P1b) to obtain candidate references, then human review.
+
+## P1c: Gold review workflow and evaluation pipeline (tooling, no new measurements)
+
+- **Date:** 2026-10-04
+- **Objective:** Make human verification practical and safe, and have the first real WER/CER computable as soon as verified references exist.
+- **Changes:**
+  - **Gold schema:** `candidate_text` is now immutable (the old schema overwrote the candidate on review). Decisions are correct, needs_correction, rejected or needs_realignment.
+  - **Review tool:** `scripts/review_server.py` is a local listening tool that only accepts a verifying decision after the clip has been played through.
+  - **Scoring:** `scripts/run_gold_eval.py` refuses to score without verified segments and labels results PILOT by default. WER/CER plus substitutions, deletions and insertions, with punctuation-only normalisation.
+  - **Error analysis:** word pairs with a string-similarity heuristic tag; categories are left for manual labelling.
+  - **P2 preparation:** `compare.py`, the manifest builder, the fine-tune config and the Colab notebook.
+- **Result:** the review queue holds 369 pending segments (12 chapters at import time). Verified segments: 0. **WER/CER: NOT AVAILABLE.**
+- **Next step:** finish alignment, then a human reviews the JHN_001 segments, then run `run_gold_eval.py` for the first PILOT WER/CER.
+
+## P1d: Confidence-based triage for gold review (prompt03)
+
+- **Date:** 2026-10-04
+- **Objective:** Cut manual review effort without treating automatic transcripts as ground truth.
+- **Implementation:** `varhadi_data/triage.py` with `triage_config.json` (triage-v1) and `scripts/triage_gold_candidates.py`. The upgraded `scripts/review_server.py` orders the queue by triage and shows the scores and flags, with keyboard review and auto-advance. The gold schema gained triage and notes columns, and reviewer IDs are validated. `build_manifests.py` keeps gold-only by default and writes PSEUDO_LABELED data to separate files. Documented in `docs/gold_review.md`.
+- **Formula:** confidence = 0.35·alignment + 0.30·ASR agreement + 0.15·audio quality + 0.10·duration + 0.10·speaking rate − artifact penalties. Thresholds: high-confidence ≥ 0.90 (final), reject < 0.50 (base, before penalties). Parentheses segments are never auto-rejected.
+- **Calibration on the real distribution:** the first version would have auto-rejected 9 segments whose only problem was a translator note in parentheses (good audio). The policy was changed so correctable text artifacts only block high-confidence status. The thresholds are PROVISIONAL until compared with human decisions.
+- **Result, all 1,296 candidates (40 chapters):** HIGH_CONFIDENCE_CANDIDATE 718 (unverified), NEEDS_REVIEW 573, REJECT_CANDIDATE 5. Confidence median 0.909 (p10 0.783). Flags: contains_heading 222, parentheses 22, speaking_rate_out_of_range 4, duration_out_of_range 1.
+- **Result, JHN_001 pilot (31 segments):** NEEDS_REVIEW 11, HIGH_CONFIDENCE_CANDIDATE 20, REJECT_CANDIDATE 0. Confidence 0.821–1.0. JHN_001 is the TEST chapter, so all 31 still need human review; triage only orders them.
+- **Human-verified segments: 0.** WER/CER NOT AVAILABLE. `run_gold_eval.py` exits safely ("No verified segments").
+- **Limitations:** heuristic, uncalibrated weights; the agreement signal uses the baseline model (circular, so it can't select test data); ASR decoding stability is not available.
+- **Next step:** human review of JHN_001 in the review server, then the first PILOT WER/CER, then compare triage against the human decisions and recalibrate.

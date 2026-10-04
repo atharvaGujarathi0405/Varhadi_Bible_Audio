@@ -1,0 +1,120 @@
+# Varhadi adaptation of ai4bharat/indicconformer_stt_mr_hybrid_ctc_rnnt_large (Experiment B).
+# Consumed by the AI4Bharat NeMo fork's own script:
+#   python NeMo/examples/asr/speech_to_text_finetune.py \
+#       --config-path=/content/KisaanDost/experiments/varhadi_adaptation --config-name=finetune_varhadi \
+#       init_from_nemo_model=/content/base.nemo
+#
+# Every value is traced to a source - nothing here is tuned or guessed:
+#   [ckpt] = the checkpoint's own model_config.yaml (checkpoint_model_config.yaml, extracted locally)
+#   [ref]  = the fork's reference fine-tuning config, examples/asr/conf/asr_finetune/speech_to_text_finetune.yaml
+#            (AI4Bharat/NeMo, branch nemo-v2, commit 8dce88cf8e94963e2033c3137f7b9993b51db88a)
+#   [env]  = environment adaptation for one Colab GPU (not a modelling choice)
+#   [data] = this project's data format
+# Learning rate / schedule / epochs are the [ref] defaults: a starting point to report as such, not a tuned optimum.
+
+name: varhadi_adaptation
+init_from_nemo_model: ???  # [data] path to the baseline .nemo (downloaded with hf_hub_download in the notebook)
+
+model:
+  sample_rate: 16000  # [ckpt]
+  compute_eval_loss: false  # [ref]
+  log_prediction: true  # [ref]
+  rnnt_reduction: mean_volume  # [ref]
+  skip_nan_grad: false  # [ref]
+
+  train_ds:
+    manifest_filepath: ???  # [data] /content/p2_bundle/manifests/train_manifest.json
+    sample_rate: ${model.sample_rate}
+    batch_size: 8  # [ckpt] train_ds.batch_size (ref uses 16); fits a 16 GB T4 with <=~21 s segments - verify on first run
+    shuffle: true  # [ref]
+    num_workers: 2  # [env] Colab exposes 2 CPU cores (ckpt used 16, ref 8)
+    pin_memory: true  # [ref]
+    max_duration: 30.0  # [ckpt]
+    min_duration: 0.2  # [ckpt]
+    is_tarred: false  # [ref]
+    tarred_audio_filepaths: null  # [ref]
+    shuffle_n: 2048  # [ref]
+    bucketing_strategy: fully_randomized  # [ref]
+    bucketing_batch_size: null  # [ref]
+    return_language_id: true  # [ckpt] required by the multisoftmax decoders; manifest lines carry "lang": "mr"
+
+  validation_ds:
+    manifest_filepath: ???  # [data] /content/p2_bundle/manifests/val_manifest.json
+    sample_rate: ${model.sample_rate}
+    batch_size: 8  # [env] matched to train batch for T4 memory (ckpt 16, ref 16)
+    shuffle: false  # [ref]
+    use_start_end_token: false  # [ref]
+    num_workers: 2  # [env]
+    pin_memory: true  # [ref]
+    return_language_id: true  # [ckpt]
+
+  test_ds:
+    manifest_filepath: null  # test scoring is done separately with scripts/run_gold_eval.py (same pipeline as the baseline)
+    sample_rate: ${model.sample_rate}
+    batch_size: 8
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 2
+    pin_memory: true
+    return_language_id: true
+
+  char_labels:
+    update_labels: false  # [ref]
+    labels: null
+
+  tokenizer:
+    update_tokenizer: false  # [data] keep the checkpoint's multilingual tokenizer; Varhadi is Devanagari
+    dir: null
+    type: bpe
+
+  spec_augment:  # [ckpt] identical to the checkpoint's own augmentation (also equals [ref])
+    _target_: nemo.collections.asr.modules.SpectrogramAugmentation
+    freq_masks: 2
+    time_masks: 10
+    freq_width: 27
+    time_width: 0.05
+
+  optim:
+    name: adamw  # [ref] and [ckpt]
+    lr: 1e-4  # [ref] fine-tuning default (the ckpt's 0.3535 is a Noam scale factor for training from scratch)
+    betas: [0.9, 0.98]  # [ref] and [ckpt]
+    weight_decay: 1e-3  # [ref] and [ckpt]
+    sched:
+      name: CosineAnnealing  # [ref]
+      warmup_steps: 5000  # [ref] - roughly one epoch of ~10 h at batch 8; revisit once the train size is known
+      warmup_ratio: null  # [ref]
+      min_lr: 5e-6  # [ref]
+
+trainer:
+  devices: 1  # [env] one Colab GPU (ref: -1 = all)
+  num_nodes: 1  # [ref]
+  max_epochs: 50  # [ref] upper bound; the best checkpoint by val_wer is kept (exp_manager below)
+  max_steps: -1  # [ref]
+  val_check_interval: 1.0  # [ref]
+  accelerator: auto  # [ref]
+  strategy: auto  # [env] single device (ref: ddp)
+  accumulate_grad_batches: 1  # [ref]
+  gradient_clip_val: 0.0  # [ref]
+  precision: 32  # [ref]; 16-mixed would be faster on T4 but is a deviation to record if used
+  log_every_n_steps: 10  # [ref]
+  enable_progress_bar: true  # [ref]
+  num_sanity_val_steps: 0  # [ref]
+  check_val_every_n_epoch: 1  # [ref]
+  sync_batchnorm: false  # [env] single device (ref: true, for ddp)
+  enable_checkpointing: false  # [ref] provided by exp_manager
+  logger: false  # [ref] provided by exp_manager
+  benchmark: false  # [ref]
+
+exp_manager:
+  exp_dir: /content/drive/MyDrive/kisaandost_p2/experiments  # [env] on Drive so a Colab disconnect does not lose checkpoints
+  name: ${name}
+  create_tensorboard_logger: true  # [ref]
+  create_checkpoint_callback: true  # [ref]
+  checkpoint_callback_params:
+    monitor: val_wer  # [ref]
+    mode: min  # [ref]
+    save_top_k: 5  # [ref]
+    always_save_nemo: true  # [ref]
+  resume_if_exists: true  # [env] resume after a Colab disconnect (ref: false)
+  resume_ignore_no_checkpoint: true  # [env]
+  create_wandb_logger: false  # [ref]

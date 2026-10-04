@@ -121,33 +121,67 @@ def test_gold_seed_from_chunks_keeps_raw_and_skips_failed(tmp_path):
     )
     rows = gold.seed_from_chunks([], chunks, tmp_path)
     assert [r["segment_id"] for r in rows] == ["JHN_002_c000"]
-    assert rows[0]["raw_asr"] == "योहान अध्याय दोन" and rows[0]["corrected"] == ""
+    assert rows[0]["raw_asr"] == "योहान अध्याय दोन" and rows[0]["candidate_text"] == ""
+    assert rows[0]["source_chapter"] == "JHN_002"
     rows[0]["review_status"] = "verified"  # pretend it was reviewed...
     assert gold.seed_from_chunks(rows, chunks, tmp_path) == rows  # ...reseed must not overwrite
 
 
-def test_gold_review_requires_text_and_reviewer():
-    rows = [gold.new_row("s1", "a.wav", "VH_S001")]
-    with pytest.raises(ValueError, match="verified requires"):
-        gold.review(rows, "s1", "", "AG", "verified")
-    gold.review(rows, "s1", "माझ्या कपाशीवर", "AG", "verified")
-    assert rows[0]["review_status"] == "verified" and rows[0]["reviewed_at"]
+def test_gold_review_decisions_map_to_status_and_keep_candidate():
+    rows = [gold.new_row("s1", "a.wav", "unknown", candidate="पयले शब्द होता")]
+    gold.review(rows, "s1", "needs_correction", "AG", corrected_text="पयले शब्दच होता")
+    row = rows[0]
+    assert row["review_status"] == "verified" and row["reviewed_at"]
+    assert row["candidate_text"] == "पयले शब्द होता"  # never overwritten
+    assert gold.reference(row) == "पयले शब्दच होता"
+    gold.review(rows, "s1", "correct", "AG")
+    assert gold.reference(row) == "पयले शब्द होता" and row["corrected_text"] == ""
+    gold.review(rows, "s1", "needs_realignment", "AG")
+    assert row["review_status"] == "needs_realignment"
+    gold.review(rows, "s1", "rejected", "AG")
+    assert row["review_status"] == "rejected"
 
 
-def test_export_includes_only_verified_segments(tmp_path):
+def test_gold_review_rejects_invalid_decisions_without_changing_the_row():
+    rows = [gold.new_row("s1", "a.wav", "unknown")]  # no candidate (ASR-seeded chunk)
+    before = dict(rows[0])
+    with pytest.raises(ValueError, match="needs a candidate_text"):
+        gold.review(rows, "s1", "correct", "AG")
+    with pytest.raises(ValueError, match="requires corrected_text"):
+        gold.review(rows, "s1", "needs_correction", "AG", corrected_text="  ")
+    with pytest.raises(ValueError, match="reviewer id"):
+        gold.review(rows, "s1", "rejected", "")
+    with pytest.raises(ValueError, match="decision must be"):
+        gold.review(rows, "s1", "verified", "AG")
+    assert rows[0] == before
+    with pytest.raises(KeyError):
+        gold.review(rows, "nope", "rejected", "AG")
+
+
+def test_validate_gold_rejects_hand_edited_verified_without_review():
+    row = gold.new_row("s1", "a.wav", "unknown", candidate="x")
+    row["review_status"] = "verified"  # e.g. edited in a spreadsheet, no decision/reviewer
+    assert any("decision and a reviewer" in e for e in gold.validate_gold([row]))
+
+
+def test_export_includes_only_verified_segments_from_selected_chapters(tmp_path):
     data = tmp_path / "data"
     src = speech_like(tmp_path / "long.wav", seconds=6, sr=SR)
     rows = [
-        gold.new_row("seg_ok", str(src), "VH_S001", "1.000", "3.500"),
-        gold.new_row("seg_pending", str(src), "VH_S001", "3.500", "5.000", corrected="draft"),
+        gold.new_row("seg_ok", str(src), "unknown", "1.000", "3.500", candidate="खरा", source_chapter="JHN_001"),
+        gold.new_row("seg_pending", str(src), "unknown", "3.500", "5.000", candidate="draft", source_chapter="JHN_001"),
+        gold.new_row("seg_other", str(src), "unknown", "0.000", "1.000", candidate="इतर", source_chapter="JHN_002"),
     ]
-    gold.review(rows, "seg_ok", "खरा मजकूर", "AG", "verified")
+    gold.review(rows, "seg_ok", "needs_correction", "AG", corrected_text="खरा मजकूर")
+    gold.review(rows, "seg_other", "correct", "AG")
     gold.write_gold(rows, data)
-    assert gold.export_gold(data) == 1
+    assert gold.export_gold(data, chapters=["JHN_001"]) == 1
     with (data / GOLD_EVAL).open(encoding="utf-8", newline="") as f:
         [row] = list(csv.DictReader(f))
-    assert row["reference_text"] == "खरा मजकूर" and row["speaker_id"] == "VH_S001"
+    assert row["reference_text"] == "खरा मजकूर" and row["segment_id"] == "seg_ok"
+    assert float(row["duration_sec"]) == pytest.approx(2.5, abs=0.01)
     assert sf.info(str(data / "evaluation" / "audio" / "seg_ok.wav")).duration == pytest.approx(2.5, abs=0.01)
+    assert gold.export_gold(data) == 2  # no chapter filter: every verified segment
 
 
 def test_withdraw_deletes_all_speaker_data_and_retires_id(tmp_path):
@@ -174,8 +208,36 @@ def test_import_alignments_queues_published_text_for_review(tmp_path):
     )
     rows = gold.import_alignments([], tmp_path / "align", tmp_path / "text")
     [row] = rows
-    assert row["review_status"] == "pending_review"  # never auto-verified
-    assert row["corrected"] == "पयले शब्द होता" and row["raw_asr"] == "पहिले शब्द होता"
-    assert row["provenance"].startswith("vahnt_text_align:https://www.bible.com/") and "align_score=-0.2854" in row["provenance"]
-    row["review_status"], row["reviewer"] = "verified", "AG"
+    assert row["review_status"] == "pending_review" and row["decision"] == ""  # never auto-verified
+    assert row["candidate_text"] == "पयले शब्द होता" and row["raw_asr"] == "पहिले शब्द होता"
+    assert row["source_chapter"] == "JHN_001" and row["source_ref"] == "JHN.1.1..JHN.1.2"
+    assert row["source_url"] == "https://www.bible.com/bible/3451/JHN.1.VAHNT" and row["align_score"] == "-0.2854"
+    gold.review(rows, "JHN_001_a000", "correct", "AG")
     assert gold.import_alignments(rows, tmp_path / "align", tmp_path / "text") == rows  # no overwrite
+
+
+def test_session_sheet_filters_crop_scope_and_skips_unrewritten_read_prompts():
+    from varhadi_data.prompts import session_sheet
+
+    base = {"topic": "t", "text": "मराठी मसुदा", "varhadi_text": ""}
+    prompts = [
+        {**base, "prompt_id": "E03", "type": "elicitation", "crop": "cotton"},
+        {**base, "prompt_id": "R01", "type": "read", "crop": "cotton"},  # no Varhadi rewrite yet
+        {**base, "prompt_id": "R02", "type": "read", "crop": "soybean", "varhadi_text": "वऱ्हाडी वाक्य"},
+        {**base, "prompt_id": "R03", "type": "read", "crop": "orange", "varhadi_text": "x"},  # out of scope
+        {**base, "prompt_id": "E01", "type": "elicitation", "crop": "general"},
+    ]
+    sheet, skipped = session_sheet(prompts, ["cotton", "soybean"], ["general"])
+    assert [r["prompt_id"] for r in sheet] == ["E03", "R02", "E01"] and skipped == ["R01"]
+    assert sheet[1]["show_text"] == sheet[1]["expected_read_text"] == "वऱ्हाडी वाक्य"
+    assert sheet[0]["expected_read_text"] == ""  # free answer: transcribed after recording
+
+
+def test_real_prompt_file_is_complete_and_unrewritten():
+    from varhadi_data.config import DATA_DIR
+    from varhadi_data.prompts import crop_scope, read_prompts
+
+    prompts = read_prompts(DATA_DIR)
+    crops, always = crop_scope(DATA_DIR)
+    assert {p["crop"] for p in prompts} <= set(crops) | set(always)
+    assert all(not p["varhadi_text"] for p in prompts)  # nobody has written Varhadi text for us

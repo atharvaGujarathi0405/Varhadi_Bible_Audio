@@ -27,7 +27,7 @@ def _shim_numpy_sctypes() -> None:
         }
 
 
-def load_model() -> LoadedModel:
+def load_model(checkpoint_path: str | None = None) -> LoadedModel:
     """Load the pretrained Marathi NeMo checkpoint. Requires the AI4Bharat NeMo fork
     (see requirements-asr.txt) to be installed; not compatible with plain transformers.
 
@@ -36,6 +36,9 @@ def load_model() -> LoadedModel:
     match this repo's actual file (CHECKPOINT_FILENAME, see config.py), and silently falls
     back to a broken code path. Downloading the known filename and calling restore_from()
     directly is what from_pretrained()'s own docstring recommends for a local .nemo file.
+
+    `checkpoint_path`: a local .nemo (e.g. a Varhadi-adapted checkpoint from Colab) to
+    load instead of the pretrained baseline. Default None = the baseline, unchanged.
     """
     import torch
     import nemo.collections.asr as nemo_asr
@@ -43,14 +46,16 @@ def load_model() -> LoadedModel:
 
     _shim_numpy_sctypes()
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    checkpoint_path = hf_hub_download(
-        repo_id=MODEL_NAME, filename=CHECKPOINT_FILENAME, token=os.environ.get("HF_TOKEN")
-    )
+    name = str(checkpoint_path) if checkpoint_path else MODEL_NAME
+    if checkpoint_path is None:
+        checkpoint_path = hf_hub_download(
+            repo_id=MODEL_NAME, filename=CHECKPOINT_FILENAME, token=os.environ.get("HF_TOKEN")
+        )
     model = nemo_asr.models.ASRModel.restore_from(restore_path=checkpoint_path, map_location=device)
     model.freeze()
     model = model.to(device)
     model.cur_decoder = DECODER
-    return LoadedModel(model=model, device=device)
+    return LoadedModel(model=model, device=device, name=name)
 
 
 def transcribe_one(loaded: LoadedModel, wav_path: str) -> str:

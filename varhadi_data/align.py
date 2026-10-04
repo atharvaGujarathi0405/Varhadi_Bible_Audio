@@ -25,18 +25,14 @@ Scores, and the bias they can introduce:
 """
 from __future__ import annotations
 
-import unicodedata
-
 import numpy as np
+
+from asr_baseline.utils import strip_punctuation
 
 NEG = -1e30
 
 
-def clean_for_alignment(text: str) -> str:
-    """Drop punctuation/symbols (Unicode P*/S*), keep letters, matras, virama and digits.
-    (A regex \\w would strip Devanagari combining marks.)"""
-    chars = (" " if unicodedata.category(c)[0] in "PS" else c for c in text)
-    return " ".join("".join(chars).split())
+clean_for_alignment = strip_punctuation  # same normalisation as scoring (asr_baseline.utils)
 
 
 def ctc_align(log_probs: np.ndarray, tokens: list[int], blank: int) -> list[tuple[int, int]]:

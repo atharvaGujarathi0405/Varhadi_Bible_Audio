@@ -1,11 +1,23 @@
 KISAANDOST / VARHADI ASR PROJECT - PROGRESS LOG
 ================================================
-Last updated: 2026-09-23
+Last updated: 2026-10-04
 
 Project: Region-Adaptive Multimodal AI Assistant for Varhadi-Speaking Farmers
-in Vidarbha, Maharashtra (KisaanDost). Current phase: Experiment 0 only -
-establish a raw pretrained Marathi ASR baseline on Varhadi speech, no
-adaptation, no correction, no fine-tuning.
+in Vidarbha, Maharashtra (KisaanDost). Full plan and phase priorities: prompt.md
+(P0 ASR baseline -> P1 dataset -> P2 adaptation -> ... -> P11 deployment).
+
+Current status:
+  P0 (raw baseline + chunked inference)  DONE - raw transcription of all 89 chapters.
+  P1 (dataset + gold-transcript tooling) DONE (tooling). Paired data IN PROGRESS:
+                                         alignment 40/89 chapters, 1,296 candidate
+                                         segments, triaged; human review NOT DONE.
+  P2 (adaptation)                        PREPARED, NOT STARTED (P2_READY.md: not ready).
+  P3+ (normalisation, RAG, LLM, ...)     NOT STARTED.
+No WER/CER has been reported anywhere: human-verified segments = 0.
+
+Commits: 2115da5, b5dadbc, 3555bd1 (Sept), 6f81bcd (P0), c497063 (P1),
+636be55 (baseline batch + fixes). Work from prompt2.md and prompt03.md
+(sections 9b-9d) is NOT committed yet. Tests: 83/83 passing on Windows.
 
 ------------------------------------------------
 1. DOWNLOADER (pre-existing, untouched this project)
@@ -21,24 +33,25 @@ adaptation, no correction, no fine-tuning.
 ------------------------------------------------
 Structure:
   asr_baseline/          config.py, audio_utils.py, model.py, transcribe.py,
-                          evaluate.py, error_analysis.py, utils.py
+                          evaluate.py, error_analysis.py, utils.py,
+                          chunking.py (added in P0, section 6)
   scripts/                validate_asr_dataset.py, run_asr_baseline.py,
                           generate_asr_report.py
   asr_metadata.csv        header-only template (audio_path,reference_text,speaker_id)
                           - no ground truth exists yet
-  asr_outputs/            predictions.csv, metrics.json, per_sample_metrics.csv,
-                          error_analysis.csv, baseline_report.md, plots/
+  asr_outputs/            predictions.csv, chunks/, metrics.json,
+                          per_sample_metrics.csv, baseline_report.md, plots/
   requirements-asr.txt    isolated from the downloader's requirements.txt
   .env                    HF_TOKEN (gitignored, not committed)
 
 Two modes implemented:
   Mode 1 (transcription-only): works on any audio, no reference needed.
   Mode 2 (evaluation): WER/CER via jiwer, ONLY computed for rows with a real
-  reference_text in asr_metadata.csv. Never fabricated.
+  reference_text. Never fabricated.
 
 Own resume mechanism via predictions.csv (independent of downloader's
-progress.json). 12 unit tests added (tests/test_asr_*.py), all mocked, no
-model download required. 18/18 total tests passing (6 downloader + 12 ASR).
+progress.json). 12 unit tests at the time (18/18 total with the downloader's);
+52/52 as of 2026-10-04.
 
 ------------------------------------------------
 3. WSL2 ASR ENVIRONMENT (NeMo requires Linux; Windows pip install unsupported)
@@ -79,15 +92,18 @@ transcribe_one() fix (asr_baseline/model.py):
 
 Access: the HF repo is gated. User created a HuggingFace token, accepted the
 model's terms, token stored in .env (gitignored) as HF_TOKEN, read via
-os.environ in model.py.
+os.environ in model.py. The model is now cached, so runs use HF_HUB_OFFLINE=1.
 
 Other environment issues hit and resolved:
   - WSL DNS was completely broken at the start (systemd-resolved stub had no
     upstream servers). Fixed by user running (with sudo, outside this
     session): echo "nameserver 8.8.8.8" > /etc/resolv.conf
+    It has since reverted; see section 11.
   - WSL's exec layer hung once (HCS_E_CONNECTION_TIMEOUT) after a background
     job was interrupted mid-session; resolved itself after the machine was
     left overnight / WSL cold-started fresh.
+  - pytest was missing from the WSL venv and could not be installed (DNS), so
+    the test suite currently runs on Windows only.
 
 ------------------------------------------------
 4. FIRST REAL TRANSCRIPTION RESULT (2026-09-23)
@@ -97,10 +113,10 @@ in one pass gets OOM-killed. WSL2 defaults to 50% of host RAM; this machine
 has ~16GB total RAM, so WSL2 gets ~7.7GB, and the Conformer encoder's full
 self-attention over an ~8-minute single utterance exceeds that. Confirmed via
 dmesg oom-killer log (process hit ~6GB RSS before being killed).
+(Fixed by chunked inference - section 6.)
 
-User chose to prove the pipeline first on a short clip rather than immediately
-fix the memory ceiling. Result, on a 30-second trimmed sample of
-audio/JHN_001.mp3 (asr_audio/JHN_001_sample30s.wav, original mp3 untouched):
+Result on a 30-second trimmed sample of audio/JHN_001.mp3
+(asr_audio/JHN_001_sample30s.wav, original mp3 untouched):
 
   Model:        ai4bharat/indicconformer_stt_mr_hybrid_ctc_rnnt_large (ctc decoder)
   NeMo:         1.23.0rc0 (AI4Bharat fork)
@@ -115,38 +131,252 @@ audio/JHN_001.mp3 (asr_audio/JHN_001_sample30s.wav, original mp3 untouched):
   काही या जगात निर्माण झालं होत सगळं काही त्याच्यापासूनच निर्माण झालं होत तो
   शब्द सगळ्या जीवनाचा स््रूप "
 
-  Saved to asr_outputs/predictions.csv (reference column empty - no WER/CER
-  computed, no ground truth exists). No Varhadi correction, no dictionary, no
-  translation, no LLM post-processing applied anywhere in this pipeline.
-
-Qualitative note (not a formal score): this is recognizably John 1:1-4
-("In the beginning was the Word...") in Marathi/Varhadi, with at least one
-visible ASR error near the end ("स््रूप" looks like a garbled "स्वरूप").
-Consistent with an unadapted Marathi model hearing Varhadi speech.
+Qualitative note (not a formal score): recognizably John 1:1-4 in
+Marathi/Varhadi, with at least one visible ASR error near the end ("स््रूप").
 
 ------------------------------------------------
-5. WHAT'S NOT DONE YET / OPEN ITEMS
+5. PHASE 0 AUDIT (2026-10-04)
 ------------------------------------------------
-- Full-chapter (multi-minute) inference still OOM-kills on this machine.
-  Not yet fixed. Options on the table (user has not chosen yet):
-    a) Raise WSL2's memory cap via .wslconfig (~12GB) + wsl --shutdown.
-    b) Add audio chunking/stitching logic to asr_baseline (real code change).
-- Batch mode (scripts/run_asr_baseline.py with no --audio flag, over all 89
-  downloaded chapters) has NOT been run yet - explicitly deferred until the
-  first single-file transcription was confirmed working, per user's request
-  to "stop and report before starting batch inference."
-- No manually-transcribed Varhadi reference transcripts exist yet, so WER/CER
-  Mode 2 has never been exercised on real data (only unit-tested with
-  synthetic fixtures).
-- asr_outputs/baseline_report.md has not been generated from a real run yet
-  (scripts/generate_asr_report.py exists and works, just hasn't been pointed
-  at real predictions.csv content beyond the one 30s sample).
+Inspected the whole repo per prompt.md before changing anything; 18/18 tests
+passed. Findings: downloader + ASR baseline working; no backend, frontend,
+DB or RAG yet; ZERO paired Varhadi audio+transcript data (biggest project
+risk); CPU-only machine. Also fixed: stale path in README, requirements-asr.txt
+pins that did not match the installed jiwer 4.0.0 / librosa 1.0.0.
+
+User decisions: approve P0; paired-data source = option (b), published VAHNT
+text + forced alignment; fine-tuning will run on a Colab GPU.
 
 ------------------------------------------------
-6. SUGGESTED NEXT STEP
+6. P0 - CHUNKED INFERENCE (commit 6f81bcd)
 ------------------------------------------------
-Decide how to handle full-chapter-length audio (memory cap vs. chunking),
-then run scripts/run_asr_baseline.py in batch mode over the 89 downloaded
-chapters (transcription-only, no reference required) to get a first broad
-look at raw Marathi-on-Varhadi ASR behavior before investing in a manually
-transcribed evaluation set.
+Chose chunking over raising the WSL memory cap: it works on any machine and
+keeps memory flat. asr_baseline/chunking.py; model.py and all earlier fixes
+untouched.
+  - Audio longer than max_chunk_sec is split at the quietest 25 ms frame
+    between target and max seconds (defaults 20 s / 30 s, overlap 0).
+    Configurable via --chunk-sec / --max-chunk-sec / --overlap-sec or the
+    ASR_CHUNK_SEC / ASR_CHUNK_MAX_SEC / ASR_CHUNK_OVERLAP_SEC env vars.
+  - Per-chunk resume + failure recovery in asr_outputs/chunks/<stem>.csv:
+    finished chunks are skipped, failed ones retried. --force clears both levels.
+  - Stitching: overlap 0 -> disjoint chunks joined in order. Overlap > 0 ->
+    longest common run of >= 2 words (difflib) at each seam. Exact
+    suffix/prefix matching was tried first and FAILED on a real seam (edge
+    words heard differently: "बनच्या" vs "ह वन्याच्या"), so it was replaced.
+  - Output stays raw. Logs: logs/asr_baseline.log. Docs: docs/asr_baseline.md.
+
+Measured: JHN_001 (473.6 s) -> 19 chunks, 53.9 s inference, peak RSS 1.74 GB
+(the single pass had been OOM-killed at ~6 GB). QUALITATIVE: on the 30 s
+sample, chunked output was nearly identical to single pass (a few boundary
+spellings differ).
+
+------------------------------------------------
+7. EXPERIMENT 0 - FULL BASELINE BATCH (commit 636be55)
+------------------------------------------------
+- 89/89 downloaded chapters transcribed raw (705.9 min): 0 failed, 0 empty,
+  1,771 chunks. Ran 2026-10-03 to 2026-10-04; stopped at 41 files overnight
+  and resumed next morning from the saved chunks without losing work.
+- Throughput (87 chapters that did not reuse chunks): 689.0 min of audio in
+  72.6 min of inference, ~9.5x realtime on CPU (per-chapter median 10.3x).
+- asr_outputs/baseline_report.md regenerated from the real outputs.
+- WER/CER: NOT AVAILABLE (metrics.json: 0 evaluated samples).
+- Bug found + fixed: resume compared raw path strings, so JHN_001 was recorded
+  twice (relative vs absolute path) and the report said 91 files / 714.3 min.
+  Paths are now stored repo-relative and normalised on resume; the identical
+  duplicate row was removed. Report now: 90 rows (89 chapters + the 30 s
+  sample from section 4), 706.4 min.
+
+------------------------------------------------
+8. P1 - DATASET TOOLING (commit c497063)
+------------------------------------------------
+New package varhadi_data/ + CLI scripts/dataset_tool.py. Docs: docs/dataset.md.
+  - data/ layout: raw, processed, transcripts, metadata, splits, evaluation,
+    private, prompts.
+  - Manifest with the prompt.md columns, plus validation that blocks fabricated
+    transcripts, non-pseudonymous speaker IDs and native recordings without
+    consent. VAHNT rows: speaker_id=unknown, transcript NOT AVAILABLE.
+  - Native recording intake: consent gate; pseudonymous VH_S### IDs from
+    HMAC(SPEAKER_ID_SALT, private key), so the raw name/phone is never stored;
+    original kept byte-for-byte + a 16 kHz mono copy; clipping/loudness flags;
+    withdraw-speaker deletes all of a speaker's data and retires the ID.
+  - Speaker-level train/val/test split with a leakage check; unknown speakers
+    (all VAHNT) always go to train.
+  - Gold workflow: raw_asr kept separate from corrected text; "verified"
+    requires a reviewer and text; only verified rows are exported, in the
+    format the existing evaluator reads (run_asr_baseline.py --metadata /
+    --predictions).
+  - data/prompts/recording_prompts.csv: 11 elicitation + 16 read prompts, all
+    standard-Marathi DRAFTS that a native Varhadi speaker must rewrite.
+  - Registered 89 VAHNT chapters (705.9 min). Native recordings: 0. Verified
+    gold segments: 0.
+
+------------------------------------------------
+9. P1b - VAHNT TEXT FORCED ALIGNMENT (option b)
+------------------------------------------------
+varhadi_data/vahnt_text.py, varhadi_data/align.py, scripts/vahnt_align.py.
+  - Text fetched with Playwright, like the downloader (bible.com blocks plain
+    HTTP with a JS challenge). Keeps section headings + verse text; drops
+    verse numbers, cross-references and footnotes. Stored verbatim with URL
+    and fetch date.
+  - All 89 chapters fetched. 39 have bridged verses (e.g. LUK.2.22+23+24);
+    checked: no verse text missing in any chapter.
+  - Alignment: numpy CTC Viterbi (no new dependency; torchaudio not installed)
+    on the baseline model's Marathi CTC log-probs, computed per silence-cut
+    chunk. Audio before the first word and after the last may stay unaligned,
+    which absorbs the spoken book/chapter announcement. Segments are ~20 s or
+    shorter, cut between verses.
+  - Pilot JHN_001: 31 segments covering 6.32-471.56 s. For all 31, the
+    baseline's own decode starts/ends on the same words as the aligned text
+    (automatic check, NOT a listening test).
+  - QUALITATIVE OBSERVATION: text vs baseline differences are mostly
+    systematic Varhadi -> standard Marathi forms: काई->काही, नाई->नाही,
+    त्याले->त्याला, पयले->पहिले, देला->दिला, म्हतलं->म्हटलं. This is exactly the
+    gap adaptation targets. CER vs the published text (median 0.125) is NOT a
+    verified baseline metric.
+  - Bias rule: never filter the evaluation set on alignment score or on CER
+    vs the baseline; that would keep only what the baseline already gets right.
+  - gold-import-alignments queues aligned segments as pending_review, with the
+    published text as candidate reference (never auto-verified).
+  - Full run (align --all): 40/89 chapters aligned (0 failures, peak RSS
+    2.1 GB). Claude Code's background-job manager stopped it twice for low
+    system memory (not a code failure). A rerun skips finished chapters.
+  - Review queue: 1,296 candidate segments, 5.54 h, 40 chapters, all
+    pending_review. 54 score below -1.5; their boundaries still match, the
+    mismatch is inside (e.g. translator notes in parentheses in the published
+    text that the narrator likely does not read).
+  Bugs found + fixed: a verse continuing in a new paragraph was glued onto the
+  previous word; int8 overflow in the alignment backtrace on real-length input
+  (NumPy 2); the "page loaded" wait only matched chapter 1 and then missed
+  chapters that start with a bridged verse (LUK 22, MAT 15, MAT 17).
+
+------------------------------------------------
+9b. P1c - GOLD REVIEW + EVALUATION TOOLING (prompt2.md, 2026-10-04)
+------------------------------------------------
+- Gold schema fixed: candidate_text is immutable (the old schema overwrote it on
+  review). Decisions: correct / needs_correction -> verified;
+  rejected; needs_realignment. Source chapter, URL and alignment score have
+  their own columns.
+- scripts/review_server.py: local (127.0.0.1) listening tool showing the clip,
+  candidate, source reference and status. Verifying decisions are only accepted
+  after the clip has played through. (Upgraded in 9c: triage ordering, keyboard
+  shortcuts, progress counts, baseline ASR shown as prompt03 asked.)
+- scripts/run_gold_eval.py: export verified test chapters -> transcribe ->
+  WER/CER/S/D/I + per-sample + error pairs + report in experiments/<name>/.
+  Refuses to score with 0 verified segments; labels results PILOT unless --final.
+  Normalisation = punctuation stripping only (shared with alignment).
+- Error analysis: aggregated word substitution/deletion/insertion pairs with a
+  heuristic "similar form / different word" tag; manual categories left blank.
+- Agricultural data gap: prompts gained crop tags + varhadi_text / rewritten_by
+  columns; crop scope in data/prompts/crop_scope.json; `session-sheet`
+  command; register-recording --prompt-id. docs/data_collection.md.
+- P2 prep (NOT trained): checkpoint config extracted from the .nemo and
+  summarised; manifest builder (chapter holdout, test = verified only,
+  unverified training only with an explicit flag); finetune_varhadi.yaml with
+  every value source-tagged ([ckpt] / fork reference config / [env]); Colab
+  notebook at the pinned fork commit; experiments/evaluation/compare.py.
+- Review queue: 1,296 pending segments (40 chapters). Verified: 0.
+  WER/CER: NOT AVAILABLE. P2 readiness: P2_READY.md (NOT READY: 0 verified,
+  alignment 40/89, CPU smoke test not run).
+
+------------------------------------------------
+9c. P1d - CONFIDENCE-BASED TRIAGE (prompt03.md, 2026-10-04)
+------------------------------------------------
+Goal: cut manual review effort WITHOUT treating automatic text as ground truth.
+- varhadi_data/triage.py + varhadi_data/triage_config.json (version triage-v1;
+  every weight and threshold lives in the config). scripts/triage_gold_candidates.py
+  (--chapter / --all / --threshold / --review-threshold / --export-csv / --report)
+  writes ONLY the triage columns of the gold CSV, plus
+  data/evaluation/triage_report.csv and triage_summary.json.
+- Formula: confidence = 0.35*alignment + 0.30*ASR agreement (CER + ins/del rate)
+  + 0.15*audio quality (silence, clipping, loudness) + 0.10*duration
+  + 0.10*speaking rate - artifact penalties (parentheses 0.25, empty ASR 0.30,
+  digits/Latin 0.15, repeated word 0.15, heading 0.05), clipped to [0,1].
+  ASR decoding stability: NOT AVAILABLE (would need re-decoding).
+- Status: HIGH_CONFIDENCE_CANDIDATE >= 0.90 (final score, no blocking flag);
+  REJECT_CANDIDATE if base score (before penalties) < 0.50 or a hard failure;
+  otherwise NEEDS_REVIEW. Thresholds set from the real distribution
+  (0.90 ~= median) and PROVISIONAL until compared with human decisions.
+- Calibration finding: the first version auto-rejected 9 segments whose only
+  problem was an unread translator note in parentheses (good audio). Policy
+  changed: correctable text artifacts block HIGH_CONFIDENCE but never cause
+  rejection.
+- Results, all 1,296 candidates: HIGH_CONFIDENCE 718 (UNVERIFIED), NEEDS_REVIEW
+  573, REJECT 5. Confidence median 0.909. Flags: contains_heading 222,
+  parentheses 22, speaking_rate_out_of_range 4, duration_out_of_range 1.
+- JHN_001 pilot (31): NEEDS_REVIEW 11, HIGH_CONFIDENCE 20, REJECT 0. JHN_001 is
+  the TEST chapter, so all 31 still need human review; triage only orders them.
+- Known bias: the agreement signal uses the baseline model (circular), so triage
+  may order review but must never select test data.
+- review_server.py upgraded: queue NEEDS_REVIEW -> REJECT -> HIGH, lowest
+  confidence first; shows candidate, baseline ASR, scores, flags, duration,
+  progress (reviewed/verified/corrected/rejected/remaining + triage counts);
+  keys V/E/R/A/Space/N/P; auto-advance; notes field; state lives only in the CSV
+  (safe across refreshes and crashes). Reviewer IDs validated (2-20 chars, no
+  names or phone numbers).
+- gold.py: new triage + review_notes columns (existing columns unchanged);
+  VERIFIED/CORRECTED/REJECTED accepted as aliases of correct/needs_correction/
+  rejected.
+- build_manifests.py: gold-only by default. --include-unverified writes pending
+  HIGH_CONFIDENCE segments as PSEUDO_LABELED to SEPARATE files
+  (train/val_pseudo_labeled_manifest.json); the test split is always gold-only.
+- Integrity checks: 0 non-triage fields changed; downloader files unchanged vs
+  git; 0 of 89 MP3s modified; 0 gold labels created. Docs: docs/gold_review.md.
+
+------------------------------------------------
+9d. FIRST GOLD EVALUATION ATTEMPT (2026-10-04)
+------------------------------------------------
+- The user reported the JHN_001 human review as complete. The gold CSV showed
+  all 31 JHN_001 segments still pending_review, with no decision, reviewer or
+  timestamp. The file had not been written since the alignment import, and no
+  review server was running. Likely cause: the review was not done in
+  scripts/review_server.py, or the saves were refused (missing reviewer ID,
+  clip not played through).
+- run_gold_eval.py --test-chapters JHN_001 exited safely: "No verified
+  segments ... WER/CER NOT computed". No Experiment 0 WER/CER report was
+  produced, because nothing has been verified.
+- Note: run_gold_eval decodes each verified clip with the UNCHANGED baseline,
+  because chapter-level predictions use different chunk boundaries and cannot
+  be paired with aligned segments. asr_outputs/predictions.csv stays untouched.
+
+------------------------------------------------
+10. PRIVACY / REPO DECISIONS
+------------------------------------------------
+- The GitHub remote (Varhadi_Bible_Audio) is PUBLIC. Kept out of git:
+  audio/, asr_audio/, .env, data/raw/, data/processed/, data/private/,
+  data/transcripts/ (VAHNT text has an unverified licence; future native
+  speakers' transcripts), data/evaluation/. Back these up separately.
+- .env.example documents HF_TOKEN, the chunk settings and SPEAKER_ID_SALT.
+
+------------------------------------------------
+11. OPEN ITEMS / WAITING ON USER
+------------------------------------------------
+- data/metadata/manifest.csv is DELETED in the working tree (not by Claude);
+  the deletion is not committed. Confirm intent. Restore with
+  "git restore data/metadata/manifest.csv" or "dataset_tool.py register-vahnt".
+- Decide: keep tracking the manifest in git (once native speakers are added it
+  will hold district/age group/gender per pseudonym) or make the repo private.
+- HUMAN REVIEW OF JHN_001 (main blocker): all 31 segments, 7.8 min, in
+  "python scripts/review_server.py --chapter JHN_001" (enter reviewer
+  initials, play each clip to the end, then V / E + Ctrl+Enter / R).
+  Then run_gold_eval.py.
+- Restart align --all (49 chapters left, ~1 h CPU) when memory allows;
+  close Firefox/VS Code first or run it in a normal terminal. Then
+  gold-import-alignments and triage --all again.
+- Commit the prompt2 + prompt03 work (currently uncommitted).
+- Decide whether to train on unverified aligned candidates (P2_READY.md).
+- WSL DNS is broken again (resolv.conf -> 127.0.0.53); only needed for pip
+  installs in WSL. Fix as root:
+  wsl -d Ubuntu -u root -- sh -c "echo nameserver 8.8.8.8 > /etc/resolv.conf"
+
+------------------------------------------------
+12. NEXT STEPS
+------------------------------------------------
+1. Human review of JHN_001 (all 31) -> first PILOT WER/CER (Experiment 0 report
+   and error analysis).
+2. Compare the triage labels with the human decisions -> recalibrate the
+   thresholds (bump the triage_config version).
+3. Finish the alignment (49 chapters); review more segments (NEEDS_REVIEW
+   first) to grow the verified set; start native agricultural recordings
+   (docs/data_collection.md).
+4. Lock the held-out test set, then run the CPU smoke test, then P2 fine-tuning on
+   Colab (P2_READY.md).
+5. Baseline vs adapted on the identical test set -> comparison.csv/json/md.

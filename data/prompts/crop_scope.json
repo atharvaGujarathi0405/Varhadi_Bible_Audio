@@ -1,0 +1,5 @@
+{
+  "crops": ["cotton", "soybean", "orange", "tur"],
+  "status": "proposed in prompt.md; confirm the final crop scope before collecting recordings",
+  "always_include": ["general"]
+}

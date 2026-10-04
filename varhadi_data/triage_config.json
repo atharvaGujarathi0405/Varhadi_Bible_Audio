@@ -1,0 +1,79 @@
+{
+  "version": "triage-v1",
+  "note": "Triage ONLY decides review order and pseudo-label eligibility. It never marks anything verified. Ramps map a raw signal linearly from 'bad' (0) to 'good' (1). Defaults set from the 1,296-candidate distribution on 2026-10-04 (docs/gold_review.md); PROVISIONAL until calibrated against human decisions.",
+  "weights": {
+    "alignment": 0.35,
+    "agreement": 0.3,
+    "audio_quality": 0.15,
+    "duration": 0.1,
+    "speaking_rate": 0.1
+  },
+  "ramps": {
+    "align_score": {
+      "bad": -2.0,
+      "good": -0.5
+    },
+    "cer_vs_asr": {
+      "bad": 0.45,
+      "good": 0.12
+    },
+    "insert_delete_rate": {
+      "bad": 0.35,
+      "good": 0.05
+    },
+    "silence_ratio": {
+      "bad": 0.7,
+      "good": 0.3
+    },
+    "clip_ratio": {
+      "bad": 0.01,
+      "good": 0.0005
+    },
+    "rms_dbfs_low": {
+      "bad": -40.0,
+      "good": -30.0
+    },
+    "rms_dbfs_high": {
+      "bad": -1.0,
+      "good": -6.0
+    }
+  },
+  "duration_sec": {
+    "hard_min": 1.0,
+    "min_ok": 3.0,
+    "max_ok": 25.0,
+    "hard_max": 45.0
+  },
+  "chars_per_sec": {
+    "hard_min": 4.5,
+    "min_ok": 6.5,
+    "max_ok": 12.5,
+    "hard_max": 16.0
+  },
+  "artifact_penalties": {
+    "parentheses": 0.25,
+    "digits_or_latin": 0.15,
+    "repeated_word": 0.15,
+    "empty_asr": 0.3,
+    "contains_heading": 0.05
+  },
+  "blocking_flags": [
+    "parentheses",
+    "empty_asr",
+    "empty_candidate",
+    "duration_out_of_range",
+    "mostly_silence"
+  ],
+  "thresholds": {
+    "high_confidence": 0.9,
+    "review": 0.5
+  },
+  "threshold_notes": {
+    "high_confidence": "applied to the final confidence (after artifact penalties); ~median of the 2026-10-04 distribution",
+    "review": "applied to the base confidence (BEFORE artifact penalties): text artifacts are correctable, so they send a segment to review, never to rejection",
+    "never_reject_flags": "an unread translator note lowers alignment and agreement too, but the audio is usable after a reviewer deletes the note"
+  },
+  "never_reject_flags": [
+    "parentheses"
+  ]
+}

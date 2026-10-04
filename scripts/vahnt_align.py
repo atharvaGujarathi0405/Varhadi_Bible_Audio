@@ -23,6 +23,15 @@ SEGMENT_FIELDS = ["segment_id", "audio_path", "start_sec", "end_sec", "units", "
                   "text", "align_score", "raw_asr", "cer_vs_raw_asr"]
 
 
+def peak_rss_mb() -> str:
+    try:
+        import resource  # POSIX only; alignment runs in WSL
+
+        return str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss // 1024)
+    except ImportError:
+        return "n/a"
+
+
 def cmd_fetch_text(args):
     from varhadi_data.vahnt_text import fetch_chapter_text
 
@@ -80,7 +89,8 @@ def cmd_align(args):
         rows = [{"segment_id": f"{stem}_a{i:03d}", "audio_path": rel(audio), **seg} for i, seg in enumerate(segments)]
         out = DATA_DIR / ALIGNMENTS / f"{stem}.csv"
         write_csv(out, rows, SEGMENT_FIELDS)  # written only on success, so a rerun retries failures
-        print(f"{stem}: {len(rows)} segments in {time.monotonic() - start:.1f}s -> {rel(out)}", flush=True)
+        print(f"{stem}: {len(rows)} segments in {time.monotonic() - start:.1f}s -> {rel(out)} "
+              f"(peak RSS {peak_rss_mb()} MB)", flush=True)
     if failed:
         print(f"{len(failed)} failed (rerun to retry): {' '.join(failed)}")
         return 1

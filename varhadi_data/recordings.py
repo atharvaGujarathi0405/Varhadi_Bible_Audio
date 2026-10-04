@@ -85,6 +85,7 @@ def register_recording(
     age_group: str = "",
     gender: str = "",
     prompt_text: str = "",
+    prompt_id: str = "",
     data_dir: Path = DATA_DIR,
     salt: str | None = None,
 ) -> dict:
@@ -143,7 +144,8 @@ def register_recording(
     if prompt_text:
         gold_rows = gold.read_gold(data_dir)
         gold_rows.append(
-            gold.new_row(utterance_id, row["audio_path"], speaker_id, corrected=prompt_text, provenance="read_prompt")
+            gold.new_row(utterance_id, row["audio_path"], speaker_id, candidate=prompt_text,
+                         provenance=f"read_prompt:{prompt_id}" if prompt_id else "read_prompt")
         )
         gold.write_gold(gold_rows, data_dir)
     return row

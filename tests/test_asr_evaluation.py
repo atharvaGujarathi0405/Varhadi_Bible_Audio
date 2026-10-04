@@ -1,5 +1,5 @@
 from asr_baseline.evaluate import compute_metrics, evaluable_rows, per_sample_metrics
-from asr_baseline.error_analysis import build_error_analysis
+from asr_baseline.error_analysis import build_error_analysis, edit_operations
 
 
 def test_evaluable_rows_excludes_missing_reference_and_failed_status():
@@ -38,3 +38,31 @@ def test_error_analysis_flags_high_wer():
     result = build_error_analysis(rows)
     assert "[HIGH_WER]" in result[0]["error_summary"]
     assert result[0]["manual_category"] == ""
+
+
+def test_metrics_report_edit_counts_and_ignore_punctuation_only():
+    rows = [
+        {"audio_path": "a.wav", "reference": "पयले शब्द होता, अन् हा.", "prediction": "पहिले शब्द होता हा"},
+        {"audio_path": "b.wav", "reference": "तो देव होता", "prediction": "तो देव होता रे"},
+    ]
+    metrics = compute_metrics(rows)
+    # a: पयले->पहिले substituted, अन् deleted; b: रे inserted; punctuation is not an error
+    assert (metrics["substitutions"], metrics["deletions"], metrics["insertions"]) == (1, 1, 1)
+    assert metrics["reference_words"] == 8
+    assert metrics["wer"] == 3 / 8
+    assert compute_metrics([{"audio_path": "b", "reference": "अ, ब.", "prediction": "अ ब"}])["wer"] == 0.0
+    # dialect spelling is NOT normalised away: पयले vs पहिले stays an error
+    assert compute_metrics([{"audio_path": "c", "reference": "पयले", "prediction": "पहिले"}])["wer"] == 1.0
+
+
+def test_edit_operations_aggregates_pairs_with_heuristic_tags_only():
+    rows = [
+        {"reference": "पयले शब्द होता अन् हा", "prediction": "पहिले शब्द होता हा"},
+        {"reference": "पयले देव.", "prediction": "पहिले देव रे"},
+    ]
+    ops = edit_operations(rows)
+    top = ops[0]
+    assert (top["type"], top["reference_word"], top["hypothesis_word"], top["count"]) == ("substitution", "पयले", "पहिले", 2)
+    assert top["heuristic_note"] == "similar form (heuristic)" and top["manual_category"] == ""
+    kinds = {(o["type"], o["reference_word"], o["hypothesis_word"]) for o in ops}
+    assert ("deletion", "अन्", "") in kinds and ("insertion", "", "रे") in kinds

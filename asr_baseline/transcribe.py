@@ -83,6 +83,7 @@ def run_batch(
     force: bool = False,
     settings: ChunkSettings | None = None,
     chunks_dir: Path = CHUNKS_DIR,
+    loaded=None,
 ) -> None:
     samples = discover_samples(metadata_path, audio_dir)
     if force and predictions_path.exists():
@@ -92,7 +93,7 @@ def run_batch(
             chunk_csv.unlink()
     done = set() if force else already_done(predictions_path)
 
-    loaded = load_model()
+    loaded = loaded or load_model()
     for sample in samples:
         audio_path = Path(sample["audio_path"])
         if repo_path(audio_path) in done:

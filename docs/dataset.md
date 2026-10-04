@@ -42,17 +42,19 @@ python scripts/dataset_tool.py init
 python scripts/dataset_tool.py register-vahnt
 python scripts/dataset_tool.py register-recording --audio rec.m4a --speaker-key "<private id>" \
     --district Amravati --domain agriculture --consent given [--age-group 30-45] [--gender f] \
-    [--prompt-text "text the speaker was asked to read"]
+    [--prompt-id R02] [--prompt-text "Varhadi text the speaker was asked to read"]
+python scripts/dataset_tool.py session-sheet --out session_01.csv [--crops cotton soybean]
 python scripts/dataset_tool.py withdraw-speaker VH_S004
 python scripts/dataset_tool.py split [--ratios 0.8 0.1 0.1] [--seed 13]
 python scripts/dataset_tool.py check
 python scripts/dataset_tool.py stats
-python scripts/dataset_tool.py gold-seed
-python scripts/dataset_tool.py gold-review --segment-id JHN_002_c000 --corrected "..." --reviewer AG --status verified
-python scripts/dataset_tool.py gold-export
-# then score the baseline on the verified set:
-python scripts/run_asr_baseline.py --metadata data/evaluation/gold_eval.csv --predictions asr_outputs/gold_predictions.csv
-python -m asr_baseline.evaluate --predictions asr_outputs/gold_predictions.csv --metadata data/evaluation/gold_eval.csv
+python scripts/dataset_tool.py gold-import-alignments          # aligned VAHNT segments -> review queue
+python scripts/dataset_tool.py gold-seed                       # (alternative) raw ASR chunks, no candidate text
+python scripts/review_server.py --chapter JHN_001              # LISTEN + decide, http://127.0.0.1:8765
+python scripts/dataset_tool.py gold-review --segment-id X --decision rejected --reviewer AG   # CLI fallback
+python scripts/dataset_tool.py gold-export --chapters JHN_001
+# score a model on the verified test chapters (WSL):
+python scripts/run_gold_eval.py --test-chapters JHN_001        # -> experiments/baseline/
 ```
 
 ## Native recordings: privacy and quality
@@ -72,15 +74,33 @@ python -m asr_baseline.evaluate --predictions asr_outputs/gold_predictions.csv -
 - Known speakers are shuffled with a fixed seed and assigned greedily by duration: test first, then validation, then train.
 - With few speakers, the realised ratios differ from the targets. The tool reports them rather than forcing them.
 
-## Gold transcripts
-`segment_id, audio_path, speaker_id, start_sec, end_sec, raw_asr, corrected, reviewer,
-review_status, reviewed_at, provenance`
-- **Original audio is untouched.** A segment is a time range of a source file.
-- **Two text fields:** `raw_asr` keeps the untouched baseline output, and `corrected` is what a human heard.
-- **Anchoring risk:** `gold-seed` pre-fills `raw_asr` from the ASR chunks, which can bias reviewers toward the model's errors.
-  Reviewers must transcribe what they hear, not polish the model output.
-- **Read prompts:** the text the speaker was asked to read is queued as `pending_review` and never auto-verified.
-- **Verified only:** only `verified` rows with a reviewer and non-empty `corrected` text are exported, so WER/CER is only ever computed against human-verified references.
+## Gold transcripts (human review)
+`segment_id, audio_path, speaker_id, source_chapter, start_sec, end_sec, source_ref, source_url,
+align_score, candidate_text, raw_asr, decision, corrected_text, reviewer, review_status,
+reviewed_at, provenance`
+
+- **Original audio is untouched.** A segment is a time range of a source file. The review
+  tool cuts the clip in memory.
+- **`candidate_text` is never modified.** It is the text proposed before review: the published
+  VAHNT text for aligned segments, the read prompt for recordings, empty for ASR-seeded chunks.
+  `raw_asr` keeps the untouched baseline output.
+- **Decision → status:**
+
+  | Reviewer decision | `review_status` | Reference used for scoring |
+  |---|---|---|
+  | `correct` (the candidate matches the speech) | `verified` | `candidate_text` |
+  | `needs_correction` (typed what was actually said) | `verified` | `corrected_text` |
+  | `rejected` (unusable: noise, wrong audio) | `rejected` | not used |
+  | `needs_realignment` (text fine, time span wrong) | `needs_realignment` | not used |
+
+- **Listening is enforced.** `scripts/review_server.py` only accepts `correct` or
+  `needs_correction` after the clip has played through (at least 95%), so `verified` always
+  means a human listened. The baseline ASR output is hidden by default, to avoid anchoring.
+  Validation also rejects `verified` rows without a decision and reviewer, such as rows
+  hand-edited in a spreadsheet.
+- **Read prompts** are queued as `pending_review` and never auto-verified.
+- **Verified only.** Only `verified` rows are exported (`gold-export`), so WER/CER is only
+  ever computed against human-verified references.
 
 ## Recording prompts
 `data/prompts/recording_prompts.csv` has two kinds of prompt:
@@ -91,8 +111,8 @@ All are **standard Marathi drafts** (`draft_needs_native_review`). A native Varh
 read prompts before use. They are not Varhadi text.
 
 ## Current status (2026-10-04)
-- 89 VAHNT chapters registered, 705.9 min, speaker unknown, transcripts NOT AVAILABLE.
-- Native recordings: 0. Verified gold segments: 0. Splits: not yet meaningful (no known speakers).
+- 89 VAHNT chapters, 705.9 min, speaker unknown. All 89 chapter texts fetched; alignment in progress (see EXPERIMENT_LOG.md).
+- Native recordings: 0 (workflow: docs/data_collection.md). **Verified gold segments: 0**, so there is no WER/CER yet.
 
 ## VAHNT text alignment (option b)
 
